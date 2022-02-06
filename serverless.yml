@@ -7,7 +7,47 @@ frameworkVersion: '3'
 provider:
   name: aws
   runtime: python3.8
+  stage: prod
+  region: us-east-2
+  memorySize: 128
+  timeout: 650
+  logRetentionInDays: 14  
+  tags:
+    BusinessCase: cloudone-serverless-demo
+  stackTags:
+    BusinessCase: cloudone-serverless-demo
+  iam:
+    role:
+      name: cloudone-serverless-demo
+      path: /
+      statements:
+        - Effect: 'Allow'
+          Resource: '*'
+          Action: 
+            - 'ssm:SendCommand'
+            - 'ssm:GetCommandInvocation'
+      tags:
+        BusinessCase: cloudone-serverless-demo
+
+package:
+  individually: true
+  patterns:
+  - '!**'
 
 functions:
-  hello:
-    handler: handler.hello
+  c1wsDeployCode:
+    handler: c1wsDeployCode.main
+    description: Deploy Cloud One Workload Security script
+    package:
+      patterns:      
+      - '*c1wsDeployCode.py'
+    environment:
+      deployWSScriptUrl: https://github.com/GeorgeDavis-TM/cloudOneWorkloadSecurityDemo.git
+  c1fssDeployCode:
+    handler: c1fssDeployCode.main
+    description: Deploy Cloud One File Storage Security script
+    package:
+      patterns:      
+      - '*c1fssDeployCode.py'
+    environment:
+      deployWSScriptUrl: https://github.com/GeorgeDavis-TM/filestoragesecurity-malwaretest.git

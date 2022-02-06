@@ -1,0 +1,261 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Main template with parameters
+
+Mappings:
+  RegionMap:
+    ap-northeast-1:
+      AZs: 'ap-northeast-1a,ap-northeast-1b,ap-northeast-1c'
+    ap-northeast-2:
+      AZs: 'ap-northeast-2a,ap-northeast-2b,ap-northeast-2c'
+    ap-northeast-3:
+      AZs: 'ap-northeast-3a,ap-northeast-3b,ap-northeast-3c'
+    us-east-2:
+      AZs: 'us-east-2a,us-east-2b,us-east-2c'
+    us-east-1:
+      AZs: 'us-east-1a,us-east-1b,us-east-1c'
+    us-west-1:
+      AZs: 'us-west-1a,us-west-1b'
+    us-west-2:
+      AZs: 'us-west-2a,us-west-2b,us-west-2c'
+    ap-south-1:
+      AZs: 'ap-south-1a,ap-south-1b,ap-south-1c'
+    ap-southeast-1:
+      AZs: 'ap-southeast-1a,ap-southeast-1b,ap-southeast-1c'
+    ap-southeast-2:
+      AZs: 'ap-southeast-2a,ap-southeast-2b,ap-southeast-2c'
+    ca-central-1:
+      AZs: 'ca-central-1a,ca-central-1b,ca-central-1d'
+    eu-central-1:
+      AZs: 'eu-central-1a,eu-central-1b,eu-central-1c'
+    eu-west-1:
+      AZs: 'eu-west-1a,eu-west-1b,eu-west-1c'
+    eu-west-2:
+      AZs: 'eu-west-2a,eu-west-2b,eu-west-2c'
+    eu-west-3:
+      AZs: 'eu-west-3a,eu-west-3b,eu-west-3c'
+    eu-north-1:
+      AZs: 'eu-north-1a,eu-north-1b,eu-north-1c'
+    sa-east-1:
+      AZs: 'sa-east-1a,sa-east-1b,sa-east-1c'
+    # ap-east-1:
+    #   AZs: 'ap-east-1a,ap-east-1b,ap-east-1c'
+    # me-south-1:
+    
+
+Parameters:
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
+      (-).
+    Default: techday-2021-2
+    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name
+      can include numbers, lowercase letters, uppercase letters, and hyphens (-).
+      It cannot start or end with a hyphen (-).
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/.]*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), dots(.) and forward slash (/).
+    Default: ""
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and
+      forward slash (/).
+    Type: String
+
+  # AdminIngressLocation:
+  #   Description: >-
+  #     CIDR block (IP address range) to allow SSH access to the bastion host and
+  #     HTTPS access to the Kubernetes API. Use 0.0.0.0/0 to allow access from all
+  #     locations.
+  #   Type: String
+  #   Default: 0.0.0.0/0
+  #   MinLength: '9'
+  #   MaxLength: '18'
+  #   AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
+  #   ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+  
+Resources:
+
+  # ApplicationSecurityStack:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #       TemplateURL:  !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}services/application_security/templates/main.template.yaml'
+
+  FileStorageSecurityStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        QSS3BucketName: !Sub '${QSS3BucketName}'
+        SourceBucketToCopyObjects: !Sub '${QSS3BucketName}'
+        QSS3KeyPrefix: !Sub '${QSS3KeyPrefix}'
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}services/file_storage_security/templates/main.template.yaml'
+
+  # NetworkSecurityStack:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}services/network_security/templates/main.template.yaml'
+  #     Parameters:
+  #       QSS3BucketName: !Ref QSS3BucketName
+  #       QSS3KeyPrefix: !Sub '${QSS3KeyPrefix}services/network_security/'
+  #       sshkeypair: !GetAtt KeyPairStack.Outputs.KeyPairName
+  #       AvailabilityZone: !Select
+  #         - '1'
+  #         - !Split
+  #           - ","
+  #           - !FindInMap
+  #             - RegionMap
+  #             - !Ref 'AWS::Region'
+  #             - AZs
+  #       PublicSubnetID: !GetAtt VPCStack.Outputs.PublicSubnet2ID
+  #       PublicSubnetCIDR: !GetAtt VPCStack.Outputs.PublicSubnet2CIDR
+  #       PrivateSubnetID: !GetAtt VPCStack.Outputs.PrivateSubnet2AID
+  #       VPCID: !GetAtt VPCStack.Outputs.VPCID
+  #       VPCCIDR: !GetAtt VPCStack.Outputs.VPCCIDR
+  #       IGWID: !GetAtt VPCStack.Outputs.IGWID
+  #       PublicSubnetRouteTable: !GetAtt VPCStack.Outputs.PublicSubnetRouteTable
+  
+  # ConformityStack:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     Parameters:
+  #       QSS3BucketName: !Ref QSS3BucketName
+  #       QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}services/
+  #       VPCId: !GetAtt VPCStack.Outputs.VPCID
+  #       ServiceCatalogLaunchRoleArn: !GetAtt ServiceCatalogPortfolioStack.Outputs.ServiceCatalogLaunchRoleArn
+  #       PlayerServiceCatalogPortfolio: !GetAtt ServiceCatalogPortfolioStack.Outputs.PlayerServiceCatalogPortfolio
+  #     TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}services/conformity/templates/main.template.yaml'
+
+  WorkloadSecurityStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}services/
+        VPCID: !GetAtt VPCStack.Outputs.VPCID
+        PublicSubnet1ID: !GetAtt VPCStack.Outputs.PublicSubnet1ID
+        PrivateSubnet1ID: !GetAtt VPCStack.Outputs.PrivateSubnet1AID
+        PlayerPassword: !GetAtt Passwords.Outputs.PlayerPassword
+        SecretPassword: !GetAtt Passwords.Outputs.SecretPassword
+        KeyPairName: !GetAtt KeyPairStack.Outputs.KeyPairName
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}services/workload_security/templates/main.template.yaml'
+
+  # ContainerSecurityStack:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     Parameters:
+  #       PlayerServiceCatalogPortfolio: !GetAtt ServiceCatalogPortfolioStack.Outputs.PlayerServiceCatalogPortfolio
+  #       ServiceCatalogLaunchRoleArn: !GetAtt ServiceCatalogPortfolioStack.Outputs.ServiceCatalogLaunchRoleArn
+  #       QSS3BucketName: !Ref QSS3BucketName
+  #       QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}services/
+  #       VPCID: !GetAtt VPCStack.Outputs.VPCID
+  #       PublicSubnet1ID: !GetAtt VPCStack.Outputs.PublicSubnet1ID
+  #       PublicSubnet2ID: !GetAtt VPCStack.Outputs.PublicSubnet2ID
+  #       NodeGroupSecurityGroup: !GetAtt EKSStack.Outputs.NodeGroupSecurityGroup
+  #       EKSClusterName: !GetAtt EKSStack.Outputs.EKSClusterName
+  #       C1CSRunCommandLambdaFunctionName: !Ref C1CSRunCommandLambdaFunctionName
+  #     TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}services/container_security/templates/main.template.yaml'
+
+  # ☠️ DON'T TOUCH - Or Webster might have a tak with you... or worse, Amanda! ☠️
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}infra/vpc/templates/aws-vpc.template.yaml'
+      Parameters:
+        NumberOfAZs: 3
+        AvailabilityZones: !FindInMap
+          - RegionMap
+          - !Ref 'AWS::Region'
+          - AZs
+
+  Passwords:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}utils/randomstring/randomstring.template.yaml'
+
+  KeyPairStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}utils/ec2keypair/ec2keypair.template.yaml'
+      TimeoutInMinutes: 20
+
+Outputs:
+  VPCCIDR: 
+    Value: !GetAtt VPCStack.Outputs.VPCCIDR
+    Description: VPC CIDR
+  VPCID:
+    Value: !GetAtt VPCStack.Outputs.VPCID
+    Description: VPC ID
+
+  PublicSubnet2ID:
+    Value: !GetAtt VPCStack.Outputs.PublicSubnet2ID
+    Description: PublicSubnet2 ID
+
+  PrivateSubnet2AID: 
+    Value: !GetAtt VPCStack.Outputs.PrivateSubnet2AID
+    Description: PrivateSubnet2A ID
+
+  PlayerPassword:
+    Value: !GetAtt Passwords.Outputs.PlayerPassword
+
+  AWSAccountId:
+    Value: !Ref "AWS::AccountId"
+
+  AWSConsoleUrl:
+    Value: !Sub 'https://${AWS::AccountId}.signin.aws.amazon.com/console?region=${AWS::Region}'
+
+# #Application Security Outputs
+#   C1ASWebbAppURL:
+#     Value: !GetAtt ApplicationSecurityStack.Outputs.ApplicationSecurityWebAppUrl
+
+#   C1ASLambdatoProtect:
+#     Value: !GetAtt ApplicationSecurityStack.Outputs.ApplicationSecurityBackendLambdaCode
+
+# Deploy Code
+  C1WSDeployCodeLambdaFunction:
+    Description: Logical Name of the Lambda Function
+    Value: !GetAtt WorkloadSecurityStack.Outputs.C1WSDeployCodeLambdaFunction
+  
+  C1FSSDeployCodeLambdaFunction:
+    Description: Logical Name of the Lambda Function
+    Value: !GetAtt FileStorageSecurityStack.Outputs.C1FSSDeployCodeLambdaFunction
+
+# #File Storage Security Outputs
+#   FSSBucketToScan:
+#     Value: !GetAtt FileStorageSecurityStack.Outputs.BucketSourceName
+
+#   FSSQuarantineBucket:
+#     Value: !GetAtt FileStorageSecurityStack.Outputs.BucketDestName
+
+#   FSSPromoteBucket:
+#     Value: !GetAtt FileStorageSecurityStack.Outputs.BucketPromoName
+
+#   FSSBucketToScanDashboardURL:
+#     Value: !Sub https://s3.console.aws.amazon.com/s3/buckets/${FileStorageSecurityStack.Outputs.BucketSourceName}?region=${AWS::Region}
+#     Description: The Dashboard URL for your BucketToScan 
+
+#   FSSBucketToPromoteDashboardURL:
+#     Value: !Sub https://s3.console.aws.amazon.com/s3/buckets/${FileStorageSecurityStack.Outputs.BucketPromoName}?region=${AWS::Region}
+#     Description: The Dashboard URL for your BucketToPromote
+
+#   FSSBucketToQuarantineDashboardURL:
+#     Value: !Sub https://s3.console.aws.amazon.com/s3/buckets/${FileStorageSecurityStack.Outputs.BucketDestName}?region=${AWS::Region}
+#     Description: The Dashboard URL for your BucketToQuarantine
+
+# # Network Security Outputs
+#   C1NSWrinkleFunctionArn:
+#     Value: !GetAtt NetworkSecurityStack.Outputs.WrinkleFunctionArn
+
+# #Workload Security Outputs
+#   DSMFQDN:
+#     Value: !GetAtt WorkloadSecurityStack.Outputs.DSMFQDN
+#   DSMURL:
+#     Value: !GetAtt WorkloadSecurityStack.Outputs.DSMURL
+#   DSMSecurityGroup:
+#     Value: !GetAtt WorkloadSecurityStack.Outputs.DSMSecurityGroup
+#   AccessKeyforC1WS:
+#     Value: !GetAtt WorkloadSecurityStack.Outputs.AccessKeyforC1WS
+#   SecretKeyforC1WS:
+#     Value: !GetAtt WorkloadSecurityStack.Outputs.SecretKeyforC1WS
+#   TopicARNforC1WS:
+#     Value: !GetAtt WorkloadSecurityStack.Outputs.TopicARNforC1WS

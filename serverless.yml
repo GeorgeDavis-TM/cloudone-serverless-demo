@@ -1,0 +1,13 @@
+org: georgedavis
+app: cloudone-serverless-demo
+service: cloudone-serverless-demo
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.8
+
+functions:
+  hello:
+    handler: handler.hello

@@ -57,7 +57,7 @@ Parameters:
     AllowedPattern: ^[0-9a-zA-Z-/.]*$
     ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
       uppercase letters, hyphens (-), dots(.) and forward slash (/).
-    Default: cloudone-serverless-demo
+    Default: cloudone-serverless-demo/
     Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
       can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and
       forward slash (/).
@@ -87,7 +87,6 @@ Resources:
     Properties:
       Parameters:
         QSS3BucketName: !Sub '${QSS3BucketName}'
-        SourceBucketToCopyObjects: !Sub '${QSS3BucketName}'
         QSS3KeyPrefix: !Sub '${QSS3KeyPrefix}'
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}services/file_storage_security/templates/main.template.yaml'
 
@@ -130,13 +129,12 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       Parameters:
-        QSS3BucketName: !Ref QSS3BucketName
-        QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}services/
-        VPCID: !GetAtt VPCStack.Outputs.VPCID
-        PublicSubnet1ID: !GetAtt VPCStack.Outputs.PublicSubnet1ID
-        PrivateSubnet1ID: !GetAtt VPCStack.Outputs.PrivateSubnet1AID
-        PlayerPassword: !GetAtt Passwords.Outputs.PlayerPassword
-        SecretPassword: !GetAtt Passwords.Outputs.SecretPassword
+        # QSS3BucketName: !Ref QSS3BucketName
+        # QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}services/
+        VpcId: !GetAtt VPCStack.Outputs.VPCID
+        SubnetId: !GetAtt VPCStack.Outputs.PrivateSubnet1AID
+        # PlayerPassword: !GetAtt Passwords.Outputs.PlayerPassword
+        # SecretPassword: !GetAtt Passwords.Outputs.SecretPassword
         KeyPairName: !GetAtt KeyPairStack.Outputs.KeyPairName
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}services/workload_security/templates/main.template.yaml'
 
@@ -211,14 +209,14 @@ Outputs:
 #   C1ASLambdatoProtect:
 #     Value: !GetAtt ApplicationSecurityStack.Outputs.ApplicationSecurityBackendLambdaCode
 
-# Deploy Code
-  C1WSDeployCodeLambdaFunction:
-    Description: Logical Name of the Lambda Function
-    Value: !GetAtt WorkloadSecurityStack.Outputs.C1WSDeployCodeLambdaFunction
+# # Deploy Code
+#   C1WSDeployCodeLambdaFunction:
+#     Description: Logical Name of the Lambda Function
+#     Value: !GetAtt WorkloadSecurityStack.Outputs.C1WSDeployCodeLambdaFunction
   
-  C1FSSDeployCodeLambdaFunction:
-    Description: Logical Name of the Lambda Function
-    Value: !GetAtt FileStorageSecurityStack.Outputs.C1FSSDeployCodeLambdaFunction
+#   C1FSSDeployCodeLambdaFunction:
+#     Description: Logical Name of the Lambda Function
+#     Value: !GetAtt FileStorageSecurityStack.Outputs.C1FSSDeployCodeLambdaFunction
 
 # #File Storage Security Outputs
 #   FSSBucketToScan:

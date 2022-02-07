@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Deploy Cloud One File Storage Security
+Parameters:
+  # S3 Bucket Path  
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
+      (-).
+    Default: cloudonedemo
+    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name
+      can include numbers, lowercase letters, uppercase letters, and hyphens (-).
+      It cannot start or end with a hyphen (-).
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/.]*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), dots(.) and forward slash (/).
+    Default: "cloudone-serverless-demo/"
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and
+      forward slash (/).
+    Type: String
+
+Mappings:
+  ImageId:
+    us-east-1:
+      HVM64: ami-0aeeebd8d2ab47354
+    us-east-2:
+      HVM64: ami-0d8d212151031f51c
+    us-west-1:
+      HVM64: ami-0b2ca94b5b49e0132
+    us-west-2:
+      HVM64: ami-0800fc0fa715fdcfe
+    ca-central-1:
+      HVM64: ami-07625b74039b1a58b
+
+Resources:
+  # EC2 Instance with Workload Security agent installed via user-data script  
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: cloudone-serverless-demo
+
+  # # Creates CopyZip stack
+  # CopyZipsStack:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     Parameters:
+  #       SourceBucket: !Ref QSS3BucketName        
+  #     TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/utils/copyzips/copyzips.template.yaml'      
+  #     TimeoutInMinutes: 10
+
+  # # Run a CopyZip custom resource for the given parameters
+  # CopyZips:
+  #   Type: Custom::CopyZips
+  #   Properties:
+  #     ServiceToken: !GetAtt 'CopyZipsStack.Outputs.FunctionArn'
+  #     SourceBucket: !Ref QSS3BucketName
+  #     DestBucket: !GetAtt 'CopyZipsStack.Outputs.DestinationBucket'
+  #     Prefix: !Sub '${QSS3KeyPrefix}challenges/workload_security_vision_one/lambdas/'
+  #     Objects:      
+  #     - !Ref ZipInstallPowerShell
+  #     - !Ref ZipInstallAtomicsFolder 
+  #     - !Ref ZipInstallInvokeAtomicRedTeam   
+  #     - !Ref ZipRunWSSensorCheck
+  #     - !Ref ZipPutCron 
+  #     - !Ref ZipGetCronResult
+  #     - !Ref ZipRunTestCommand
+  #     - !Ref ZipT15470061
+  #     - !Ref ZipT11360015
+  #     - !Ref ZipT10870012
+  #     # - !Ref verifyV1WSConnection
+
+Outputs:
+  S3BucketArn:
+    Description: Instance Id of the Challenge EC2 Instance
+    Value: !GetAtt S3Bucket.Arn

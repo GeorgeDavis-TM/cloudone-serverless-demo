@@ -34,15 +34,15 @@ Parameters:
 Mappings:
   ImageId:
     us-east-1:
-      HVM64: ami-0aeeebd8d2ab47354
+      HVM64: ami-01893222c83843146
     us-east-2:
-      HVM64: ami-0d8d212151031f51c
+      HVM64: ami-06ad6c264ce8dab0d
     us-west-1:
-      HVM64: ami-0b2ca94b5b49e0132
+      HVM64: ami-0ff7fc535d3457221
     us-west-2:
-      HVM64: ami-0800fc0fa715fdcfe
+      HVM64: ami-0b3456eff9b6f87f1
     ca-central-1:
-      HVM64: ami-07625b74039b1a58b
+      HVM64: ami-0b41a64dce89f27e3
 Resources:
   EC2Instance:
     Type: 'AWS::EC2::Instance'

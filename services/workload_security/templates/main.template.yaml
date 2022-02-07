@@ -20,17 +20,17 @@ Parameters:
     Type: String
     Description: Tenant ID of the Workload Security Tenant
     ConstraintDescription: must be a valid Tenant Id from Workload Security
-    Default: 0C0F6851-AB41-04C6-D6A8-5479A257E932
+    Default: 69FACFF9-CC25-89C3-E1F1-4FC5DFA33B0C
   WSPolicyId:
     Type: Number
     Description: Policy ID of the security policy to be deployed on the EC2 Instance
     ConstraintDescription: must be valid Policy Id from Workload Security.
-    Default: 1058
+    Default: 34
   WSToken:
     Type: String
     Description: Token from Workload Security Console
     ConstraintDescription: must be valid token from Workload Security.
-    Default: 09C86B32-AED2-35D9-8807-A4C47BFA6257
+    Default: 850DB008-56EE-272F-43F7-58B828ECA236
 Mappings:
   ImageId:
     us-east-1:

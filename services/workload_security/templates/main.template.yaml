@@ -31,6 +31,11 @@ Parameters:
     Description: Token from Workload Security Console
     ConstraintDescription: must be valid token from Workload Security.
     Default: 850DB008-56EE-272F-43F7-58B828ECA236
+  WSApiKey:
+    Type: String
+    Description: API Key from Workload Security Console
+    ConstraintDescription: must be valid API Key from Workload Security.
+    Default: 69FACFF9-CC25-89C3-E1F1-4FC5DFA33B0C:DE722560-89B3-3073-F395-FE9E3F2F1171:Lb7Y3M1TCRpYIZA5CrUfBlHkn/TH8I1mO7hR2gFNgpk=
 Mappings:
   ImageId:
     us-east-1:
@@ -52,7 +57,7 @@ Resources:
         - !Ref 'AWS::Region'
         - HVM64
       InstanceInitiatedShutdownBehavior: stop
-      DisableApiTermination: true
+      # DisableApiTermination: true
       InstanceType: t3a.medium
       IamInstanceProfile: !Ref SSMIAMInstanceProfile
       KeyName: !Ref KeyPairName
@@ -279,28 +284,57 @@ Resources:
       Path: /
       Roles:
         - !Ref SSMIAMRole
-  InstallPowerShell:
+  SSMWSApiKey:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: WSApiKey
+      Type: String
+      Value: !Ref WSApiKey
+  SSMWSToken:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: WSToken
+      Type: String
+      Value: !Ref WSToken
+  InstallTools:
     Type: 'AWS::SSM::Document'
     Properties:
       Content:
         schemaVersion: '2.2'
-        description: 0. Install PowerShell
+        description: 0. Install Tools
+        parameters:
+          ssmWsApiKey:
+            description: (Required) Specify your Cloud One Workload Security API Key.
+            type: String
+            default: "{{ssm:WSApiKey}}"
+          ssmWsToken:
+            description: (Required) Specify your Cloud One Workload Security Token.
+            type: String
+            default: "{{ssm:WSToken}}"
         mainSteps:
-          - action: 'aws:runShellScript'
-            name: runCommands
+          - action: 'aws:downloadContent'
+            name: downloadGitHubContent
             inputs:
-              timeoutSeconds: '60'
-              runCommand:
-                - >-
-                  curl https://packages.microsoft.com/config/rhel/7/prod.repo |
-                  sudo tee /etc/yum.repos.d/microsoft.repo
-                - yum install -y powershell
-                - >-
-                  pwsh -Command 'Install-Module powershell-yaml -Scope AllUsers
-                  -Verbose -Force;'
+              sourceType: 'GitHub'
+              sourceInfo: >-
+                {
+                  "owner": "GeorgeDavis-TM",
+                  "repository": "cloudone-serverless-demo",
+                  "getOptions": "branch:main",
+                  "path": "scripts/install-dsa.sh",
+                  "tokenInfo": "{{ssm-secure:georgedGitHubPAT}}"
+                }
+              destinationPath: '/home/ec2-user/'
+          - action: 'aws:runShellScript'
+            name: runShellScript
+            inputs:              
+              runCommand:          
+                - ./install-dsa.sh {{ssmWsApiKey}} {{ssmWsToken}}
+              workingDirectory: '/home/ec2-user/'
+              timeoutSeconds: '600'
       DocumentFormat: JSON
       DocumentType: Command
-      Name: InstallPowerShell
+      Name: InstallTools
       Tags:
         - Key: Owner
           Value: TrendMicro
@@ -309,30 +343,39 @@ Resources:
         - Key: Name
           Value: cloudone-serverless-demo
       TargetType: '/AWS::EC2::Instance'
-  InstallAtomicsFolder:
+    DependsOn:
+    - SSMWSApiKey
+    - SSMWSToken
+  InstallNodejs:
     Type: 'AWS::SSM::Document'
     Properties:
       Content:
         schemaVersion: '2.2'
-        description: 1. Install Atomics Folder
-        parameters:
-          commands:
-            type: String
-            description: 1. Install Atomics Folder
-            default: >-
-              pwsh -Command 'IEX (IWR
-              "https://raw.githubusercontent.com/redcanaryco/invoke-atomicredteam/master/install-atomicsfolder.ps1"
-              -UseBasicParsing); Install-AtomicsFolder -Force;'
+        description: 1. Install Node.js        
         mainSteps:
-          - action: 'aws:runShellScript'
-            name: runCommands
+          - action: 'aws:downloadContent'
+            name: downloadGitHubContent
             inputs:
-              timeoutSeconds: '60'
-              runCommand:
-                - '{{ commands }}'
+              sourceType: 'GitHub'
+              sourceInfo: >-
+                '{
+                    "owner": "GeorgeDavis-TM",
+                    "repository": "cloudone-serverless-demo",
+                    "getOptions": "branch:main",
+                    "path": "scripts/install-nvm.sh",
+                    "tokenInfo": "{{ssm-secure:georgedGitHubPAT}}"
+                }'
+              destinationPath: '/home/ec2-user/'
+          - action: 'aws:runShellScript'
+            name: runShellScript
+            inputs:              
+              runCommand:                                  
+                - install-nvm.sh
+              workingDirectory: '/home/ec2-user/'
+              timeoutSeconds: '600'
       DocumentFormat: JSON
       DocumentType: Command
-      Name: InstallAtomicsFolder
+      Name: InstallNodejs
       Tags:
         - Key: Owner
           Value: TrendMicro
@@ -341,30 +384,22 @@ Resources:
         - Key: Name
           Value: cloudone-serverless-demo
       TargetType: '/AWS::EC2::Instance'
-  InstallInvokeAtomicRedTeam:
+  InstallVenv:
     Type: 'AWS::SSM::Document'
     Properties:
       Content:
         schemaVersion: '2.2'
-        description: 2. Install Atomic Red Team
-        parameters:
-          commands:
-            type: String
-            description: 2. Install Atomic Red Team
-            default: >-
-              pwsh -Command 'IEX (IWR
-              "https://raw.githubusercontent.com/redcanaryco/invoke-atomicredteam/master/install-atomicredteam.ps1"
-              -UseBasicParsing); Install-AtomicRedTeam -Force;'
+        description: 2. Install Virtualenv        
         mainSteps:
           - action: 'aws:runShellScript'
             name: runCommands
             inputs:
               timeoutSeconds: '60'
               runCommand:
-                - '{{ commands }}'
+                - pip3 install virtualenv
       DocumentFormat: JSON
       DocumentType: Command
-      Name: InstallInvokeAtomicRedTeam
+      Name: InstallVenv
       Tags:
         - Key: Owner
           Value: TrendMicro
@@ -396,142 +431,6 @@ Resources:
       DocumentFormat: JSON
       DocumentType: Command
       Name: RunWSSensorCheck
-      Tags:
-        - Key: Owner
-          Value: TrendMicro
-        - Key: Product
-          Value: cloudone-serverless-demo
-        - Key: Name
-          Value: cloudone-serverless-demo
-      TargetType: '/AWS::EC2::Instance'
-  RunTestCommand:
-    Type: 'AWS::SSM::Document'
-    Properties:
-      Content:
-        schemaVersion: '2.2'
-        description: 3. Run Test Command
-        parameters:
-          commands:
-            type: String
-            description: 3. Run Test Command
-            default: >-
-              pwsh -Command 'Import-Module
-              "/AtomicRedTeam/invoke-atomicredteam/Invoke-AtomicRedTeam.psd1"
-              -Force; $PSDefaultParameterValues =
-              @{"Invoke-AtomicTest:PathToAtomicsFolder"="/AtomicRedTeam/atomics"};
-              Invoke-AtomicTest All -ShowDetailsBrief'
-        mainSteps:
-          - action: 'aws:runShellScript'
-            name: runCommands
-            inputs:
-              timeoutSeconds: '60'
-              runCommand:
-                - '{{ commands }}'
-      DocumentFormat: JSON
-      DocumentType: Command
-      Name: RunTestCommand
-      Tags:
-        - Key: Owner
-          Value: TrendMicro
-        - Key: Product
-          Value: cloudone-serverless-demo
-        - Key: Name
-          Value: cloudone-serverless-demo
-      TargetType: '/AWS::EC2::Instance'
-  T15470061:
-    Type: 'AWS::SSM::Document'
-    Properties:
-      Content:
-        schemaVersion: '2.2'
-        description: T1547.006.1 Linux - Load Kernel Module via insmod
-        parameters:
-          commands:
-            type: String
-            description: T1547.006-1 Linux - Load Kernel Module via insmod
-            default: >-
-              pwsh -Command 'Import-Module
-              "/AtomicRedTeam/invoke-atomicredteam/Invoke-AtomicRedTeam.psd1"
-              -Force; $PSDefaultParameterValues =
-              @{"Invoke-AtomicTest:PathToAtomicsFolder"="/AtomicRedTeam/atomics"};
-              Invoke-AtomicTest T1547.006 -TestNumbers 1 -Cleanup;'
-        mainSteps:
-          - action: 'aws:runShellScript'
-            name: runCommands
-            inputs:
-              timeoutSeconds: '60'
-              runCommand:
-                - '{{ commands }}'
-      DocumentFormat: JSON
-      DocumentType: Command
-      Name: T15470061
-      Tags:
-        - Key: Owner
-          Value: TrendMicro
-        - Key: Product
-          Value: cloudone-serverless-demo
-        - Key: Name
-          Value: cloudone-serverless-demo
-      TargetType: '/AWS::EC2::Instance'
-  T11360015:
-    Type: 'AWS::SSM::Document'
-    Properties:
-      Content:
-        schemaVersion: '2.2'
-        description: T1136.001-5 Create a new user in Linux with `root` UID and GID
-        parameters:
-          commands:
-            type: String
-            description: T1136.001-5 Create a new user in Linux with `root` UID and GID
-            default: >-
-              pwsh -Command 'Import-Module
-              "/AtomicRedTeam/invoke-atomicredteam/Invoke-AtomicRedTeam.psd1"
-              -Force; $PSDefaultParameterValues =
-              @{"Invoke-AtomicTest:PathToAtomicsFolder"="/AtomicRedTeam/atomics"};
-              Invoke-AtomicTest T1136.001 -TestNumbers 5 -Cleanup;'
-        mainSteps:
-          - action: 'aws:runShellScript'
-            name: runCommands
-            inputs:
-              timeoutSeconds: '60'
-              runCommand:
-                - '{{ commands }}'
-      DocumentFormat: JSON
-      DocumentType: Command
-      Name: T11360015
-      Tags:
-        - Key: Owner
-          Value: TrendMicro
-        - Key: Product
-          Value: cloudone-serverless-demo
-        - Key: Name
-          Value: cloudone-serverless-demo
-      TargetType: '/AWS::EC2::Instance'
-  T10870012:
-    Type: 'AWS::SSM::Document'
-    Properties:
-      Content:
-        schemaVersion: '2.2'
-        description: T1087.001-2 View sudoers access
-        parameters:
-          commands:
-            type: String
-            description: T1087.001-2 View sudoers access
-            default: >-
-              pwsh -Command 'Import-Module
-              "/AtomicRedTeam/invoke-atomicredteam/Invoke-AtomicRedTeam.psd1"
-              -Force; $PSDefaultParameterValues =
-              @{"Invoke-AtomicTest:PathToAtomicsFolder"="/AtomicRedTeam/atomics"};
-              Invoke-AtomicTest T1087.001 -TestNumbers 2 -Cleanup;'
-        mainSteps:
-          - action: 'aws:runShellScript'
-            name: runCommands
-            inputs:
-              timeoutSeconds: '60'
-              runCommand:
-                - '{{ commands }}'
-      DocumentFormat: JSON
-      DocumentType: Command
-      Name: T10870012
       Tags:
         - Key: Owner
           Value: TrendMicro

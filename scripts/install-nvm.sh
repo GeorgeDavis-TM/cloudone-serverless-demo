@@ -7,8 +7,8 @@ whoami
 pwd
 cat ~/.bashrc
 source ~/.bashrc
-nvm --version
-nvm install 14
-nvm ls
-nvm use 14
-nvm current
+source ~/.bashrc && nvm --version
+source ~/.bashrc && nvm install 14
+source ~/.bashrc && nvm ls
+source ~/.bashrc && nvm use 14
+source ~/.bashrc && nvm current

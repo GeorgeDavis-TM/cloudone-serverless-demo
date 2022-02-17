@@ -358,19 +358,19 @@ Resources:
             inputs:
               sourceType: 'GitHub'
               sourceInfo: >-
-                '{
-                    "owner": "GeorgeDavis-TM",
-                    "repository": "cloudone-serverless-demo",
-                    "getOptions": "branch:main",
-                    "path": "scripts/install-nvm.sh",
-                    "tokenInfo": "{{ssm-secure:georgedGitHubPAT}}"
-                }'
+                {
+                  "owner": "GeorgeDavis-TM",
+                  "repository": "cloudone-serverless-demo",
+                  "getOptions": "branch:main",
+                  "path": "scripts/install-nvm.sh",
+                  "tokenInfo": "{{ssm-secure:georgedGitHubPAT}}"
+                }
               destinationPath: '/home/ec2-user/'
           - action: 'aws:runShellScript'
             name: runShellScript
             inputs:              
               runCommand:                                  
-                - install-nvm.sh
+                - ./install-nvm.sh
               workingDirectory: '/home/ec2-user/'
               timeoutSeconds: '600'
       DocumentFormat: JSON

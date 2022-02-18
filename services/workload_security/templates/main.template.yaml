@@ -408,6 +408,82 @@ Resources:
         - Key: Name
           Value: cloudone-serverless-demo
       TargetType: '/AWS::EC2::Instance'
+  DeployFSS:
+    Type: 'AWS::SSM::Document'
+    Properties:
+      Content:
+        schemaVersion: '2.2'
+        description: Deploy FSS Attack Serverless Demo    
+        mainSteps:
+          - action: 'aws:downloadContent'
+            name: downloadGitHubContent
+            inputs:
+              sourceType: 'GitHub'
+              sourceInfo: >-
+                {
+                  "owner": "GeorgeDavis-TM",
+                  "repository": "cloudone-serverless-demo",
+                  "getOptions": "branch:main",
+                  "path": "scripts/deploy-fss.sh",
+                  "tokenInfo": "{{ssm-secure:georgedGitHubPAT}}"
+                }
+              destinationPath: '/home/ec2-user/'
+          - action: 'aws:runShellScript'
+            name: runShellScript
+            inputs:              
+              runCommand:                                  
+                - ./deploy-fss.sh
+              workingDirectory: '/home/ec2-user/'
+              timeoutSeconds: '600'
+      DocumentFormat: JSON
+      DocumentType: Command
+      Name: DeployFSS
+      Tags:
+        - Key: Owner
+          Value: TrendMicro
+        - Key: Product
+          Value: cloudone-serverless-demo
+        - Key: Name
+          Value: cloudone-serverless-demo
+      TargetType: '/AWS::EC2::Instance'
+  DeployWS:
+    Type: 'AWS::SSM::Document'
+    Properties:
+      Content:
+        schemaVersion: '2.2'
+        description: Deploy Workload Attack   
+        mainSteps:
+            - action: 'aws:downloadContent'
+              name: downloadGitHubContent
+              inputs:
+                sourceType: 'GitHub'
+                sourceInfo: >-
+                  {
+                    "owner": "GeorgeDavis-TM",
+                    "repository": "cloudone-serverless-demo",
+                    "getOptions": "branch:main",
+                    "path": "scripts/deploy-ws.sh",
+                    "tokenInfo": "{{ssm-secure:georgedGitHubPAT}}"
+                  }
+                destinationPath: '/home/ec2-user/'
+            - action: 'aws:runShellScript'
+              name: runShellScript
+              inputs:              
+                runCommand:                                  
+                  - ./deploy-ws.sh
+                workingDirectory: '/home/ec2-user/'
+                timeoutSeconds: '600'
+      DocumentFormat: JSON
+      DocumentType: Command
+      Name: DeployWS
+      Tags:
+        - Key: Owner
+          Value: TrendMicro
+        - Key: Product
+          Value: cloudone-serverless-demo
+        - Key: Name
+          Value: cloudone-serverless-demo
+      TargetType: '/AWS::EC2::Instance'
   RunWSSensorCheck:
     Type: 'AWS::SSM::Document'
     Properties:

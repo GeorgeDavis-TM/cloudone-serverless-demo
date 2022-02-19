@@ -268,6 +268,7 @@ Resources:
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
         - 'arn:aws:iam::aws:policy/AmazonSSMPatchAssociation'
+        - 'arn:aws:iam::aws:policy/AdministratorAccess'
       Path: /
       RoleName: cloudone-serverless-demo-SSM-Role
       Tags:

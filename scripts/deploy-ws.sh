@@ -9,9 +9,10 @@ instance=$TAG_VALUE"("$localHostname")"
 cd /home/ec2-user
 yum install -y python3 python3-pip git curl unzip wget jq
 wget -P /home/ec2-user https://automation.deepsecurity.trendmicro.com/sdk/20_0/v1/dsm-py-sdk.zip
-unzip /home/ec2-user/dsm-py-sdk.zip
-cd dsm-py-sdk/deepsecurity
+unzip /home/ec2-user/dsm-py-sdk.zip > /dev/null 2>&1
+cd deepsecurity
 pip3 install .
+cd /home/ec2-user
 git clone https://github.com/GeorgeDavis-TM/cloudOneWorkloadSecurityDemo.git
 cd cloudOneWorkloadSecurityDemo
 tmp=$(mktemp)

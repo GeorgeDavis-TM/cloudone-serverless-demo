@@ -4,10 +4,7 @@ cd /home/ec2-user
 yum install -y python3 python3-pip git curl unzip wget jq > ~/deploy-ws.log 2>&1
 wget -P /home/ec2-user -O dsm-py-sdk.zip https://automation.deepsecurity.trendmicro.com/sdk/20_0/v1/dsm-py-sdk.zip >> ~/deploy-ws.log 2>&1
 unzip /home/ec2-user/dsm-py-sdk.zip >> ~/deploy-ws.log 2>&1
-ls -alrt /home/ec2-user
-cd deepsecurity
-pip3 install . # >> ~/deploy-ws.log 2>&1
-cd /home/ec2-user
+pip3 install . >> ~/deploy-ws.log 2>&1
 git clone https://github.com/GeorgeDavis-TM/cloudOneWorkloadSecurityDemo.git >> ~/deploy-ws.log 2>&1
 cd cloudOneWorkloadSecurityDemo
 pip3 install . >> ~/deploy-ws.log 2>&1

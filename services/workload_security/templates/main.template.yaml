@@ -451,28 +451,33 @@ Resources:
     Properties:
       Content:
         schemaVersion: '2.2'
-        description: Deploy Workload Attack   
+        description: Deploy Workload Attack
+        parameters:
+          ssmWsApiKey:
+            description: (Required) Specify your Cloud One Workload Security API Key.
+            type: String
+            default: "{{ssm:WSApiKey}}"
         mainSteps:
-            - action: 'aws:downloadContent'
-              name: downloadGitHubContent
-              inputs:
-                sourceType: 'GitHub'
-                sourceInfo: >-
-                  {
-                    "owner": "GeorgeDavis-TM",
-                    "repository": "cloudone-serverless-demo",
-                    "getOptions": "branch:main",
-                    "path": "scripts/deploy-ws.sh",
-                    "tokenInfo": "{{ssm-secure:georgedGitHubPAT}}"
-                  }
-                destinationPath: '/home/ec2-user/'
-            - action: 'aws:runShellScript'
-              name: runShellScript
-              inputs:              
-                runCommand:                                  
-                  - ./deploy-ws.sh
-                workingDirectory: '/home/ec2-user/'
-                timeoutSeconds: '600'
+          - action: 'aws:downloadContent'
+            name: downloadGitHubContent
+            inputs:
+              sourceType: 'GitHub'
+              sourceInfo: >-
+                {
+                  "owner": "GeorgeDavis-TM",
+                  "repository": "cloudone-serverless-demo",
+                  "getOptions": "branch:main",
+                  "path": "scripts/deploy-ws.sh",
+                  "tokenInfo": "{{ssm-secure:georgedGitHubPAT}}"
+                }
+              destinationPath: '/home/ec2-user/'
+          - action: 'aws:runShellScript'
+            name: runShellScript
+            inputs:              
+              runCommand:                                  
+                - ./deploy-ws.sh {{ssmWsApiKey}}
+              workingDirectory: '/home/ec2-user/'
+              timeoutSeconds: '600'
       DocumentFormat: JSON
       DocumentType: Command
       Name: DeployWS

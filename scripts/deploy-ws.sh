@@ -7,15 +7,15 @@ REGION=`curl http://instance-data/latest/meta-data/placement/availability-zone |
 TAG_VALUE="`aws ec2 describe-tags --filters "Name=resource-id,Values=$INSTANCE_ID" "Name=key,Values=$TAG_NAME" --region $REGION --output=text | cut -f5`"
 instance=$TAG_VALUE"("$localHostname")"
 cd /home/ec2-user
-yum install -y python3 python3-pip git curl unzip wget jq > /home/ec2-user/deploy-ws.log 2>&1
-wget -P /home/ec2-user https://automation.deepsecurity.trendmicro.com/sdk/20_0/v1/dsm-py-sdk.zip >> /home/ec2-user/deploy-ws.log 2>&1
-unzip /home/ec2-user/dsm-py-sdk.zip >> /home/ec2-user/deploy-ws.log 2>&1
-cat /home/ec2-user/deploy-ws.log
+yum install -y python3 python3-pip git curl unzip wget jq > ~/deploy-ws.log 2>&1
+wget -P /home/ec2-user -O dsm-py-sdk.zip https://automation.deepsecurity.trendmicro.com/sdk/20_0/v1/dsm-py-sdk.zip >> ~/deploy-ws.log 2>&1
+unzip /home/ec2-user/dsm-py-sdk.zip >> ~/deploy-ws.log 2>&1
 cd deepsecurity
-pip3 install .
+pip3 install . >> ~/deploy-ws.log 2>&1
 cd /home/ec2-user
-git clone https://github.com/GeorgeDavis-TM/cloudOneWorkloadSecurityDemo.git
+git clone https://github.com/GeorgeDavis-TM/cloudOneWorkloadSecurityDemo.git >> ~/deploy-ws.log 2>&1
 cd cloudOneWorkloadSecurityDemo
+pip3 install . >> ~/deploy-ws.log 2>&1
 tmp=$(mktemp)
 jq --arg a "$dsApiKey" '.apiSecretKey = $a' config.json > "$tmp" && mv "$tmp" config.json
 jq --arg i "$instance" '.hostName = $i' config.json > "$tmp" && mv "$tmp" config.json

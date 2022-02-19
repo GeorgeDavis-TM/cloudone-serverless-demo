@@ -7,9 +7,10 @@ REGION=`curl http://instance-data/latest/meta-data/placement/availability-zone |
 TAG_VALUE="`aws ec2 describe-tags --filters "Name=resource-id,Values=$INSTANCE_ID" "Name=key,Values=$TAG_NAME" --region $REGION --output=text | cut -f5`"
 instance=$TAG_VALUE"("$localHostname")"
 cd /home/ec2-user
-yum install -y python3 python3-pip git curl unzip wget jq
-wget -P /home/ec2-user https://automation.deepsecurity.trendmicro.com/sdk/20_0/v1/dsm-py-sdk.zip
-unzip /home/ec2-user/dsm-py-sdk.zip > /dev/null 2>&1
+yum install -y python3 python3-pip git curl unzip wget jq > /home/ec2-user/deploy-ws.log 2>&1
+wget -P /home/ec2-user https://automation.deepsecurity.trendmicro.com/sdk/20_0/v1/dsm-py-sdk.zip >> /home/ec2-user/deploy-ws.log 2>&1
+unzip /home/ec2-user/dsm-py-sdk.zip >> /home/ec2-user/deploy-ws.log 2>&1
+cat /home/ec2-user/deploy-ws.log
 cd deepsecurity
 pip3 install .
 cd /home/ec2-user

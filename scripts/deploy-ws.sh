@@ -7,8 +7,7 @@ unzip /home/ec2-user/dsm-py-sdk.zip >> ~/deploy-ws.log 2>&1
 pip3 install . >> ~/deploy-ws.log 2>&1
 git clone https://github.com/GeorgeDavis-TM/cloudOneWorkloadSecurityDemo.git >> ~/deploy-ws.log 2>&1
 cd cloudOneWorkloadSecurityDemo
-ls -alrt .
-pip3 install . >> ~/deploy-ws.log 2>&1
+pip3 install -r requirements.txt >> ~/deploy-ws.log 2>&1
 localHostname=`curl http://169.254.169.254/latest/meta-data/local-hostname` >> ~/deploy-ws.log 2>&1
 TAG_NAME="Name"
 INSTANCE_ID=`curl http://instance-data/latest/meta-data/instance-id` >> ~/deploy-ws.log 2>&1

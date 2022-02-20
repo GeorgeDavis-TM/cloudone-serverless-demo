@@ -13,5 +13,4 @@ BINARY=yq_linux_amd64
 wget https://github.com/mikefarah/yq/releases/download/${VERSION}/${BINARY}.tar.gz -O - | tar xz && mv ${BINARY} /usr/bin/yq >> ~/deploy-fss.log 2>&1
 which yq
 yq -i '.custom.stages.prod.profile = "default"' serverless.yml
-cat serverless.yml
 serverless deploy -s prod >> ~/deploy-fss.log 2>&1

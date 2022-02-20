@@ -19,5 +19,5 @@ tmp=$(mktemp)
 jq --arg a "$dsApiKey" '.apiSecretKey = $a' config.json > "$tmp" && mv "$tmp" config.json
 jq --arg i "$instance" '.hostName = $i' config.json > "$tmp" && mv "$tmp" config.json
 jq --arg i "$dsmPolicyName" '.policyName = $i' config.json > "$tmp" && mv "$tmp" config.json
-cat config.json
+# cat config.json
 python3 cloud_one_workload_security_demo.py

@@ -35,7 +35,7 @@ Parameters:
     Type: String
     Description: API Key from Workload Security Console
     ConstraintDescription: must be valid API Key from Workload Security.
-    Default: 69FACFF9-CC25-89C3-E1F1-4FC5DFA33B0C:DE722560-89B3-3073-F395-FE9E3F2F1171:Lb7Y3M1TCRpYIZA5CrUfBlHkn/TH8I1mO7hR2gFNgpk=
+    Default: tmc125LnhwPHb0MTInHJuDutk8plZQN:7KfV1ZeN17MBUTQAVsWB965opbiQUf6nXqVd9acpPZYS2YXm5pfj1ZzGCptLnLxpRE
 Mappings:
   ImageId:
     us-east-1:

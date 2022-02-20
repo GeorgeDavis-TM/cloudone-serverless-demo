@@ -11,5 +11,6 @@ source /home/ec2-user/.bash_profile
 nvm use 14 >> ~/deploy-fss.log 2>&1
 npm install -g serverless # >> ~/deploy-fss.log 2>&1
 # serverless --version >> ~/deploy-fss.log 2>&1
+npm install
 serverless plugin install -n serverless-python-requirements # >> ~/deploy-fss.log 2>&1
-serverless deploy -s prod # >> ~/deploy-fss.log 2>&1
+# serverless deploy -s prod >> ~/deploy-fss.log 2>&1

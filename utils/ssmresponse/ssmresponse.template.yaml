@@ -41,8 +41,7 @@ Resources:
             Version: "2012-10-17"
             Statement:
               - Effect: "Allow"
-                Action:
-                  - 'ssm:SendCommand'
+                Action:                  
                   - 'ssm:GetCommandInvocation'
                   - 'logs:*'
                   - 'ec2:DescribeInstances'

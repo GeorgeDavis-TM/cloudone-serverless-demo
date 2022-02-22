@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Get SSM Run Command invocation response for AWS Step Functions
+Parameters:
+  # S3 Bucket Path  
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
+      (-).
+    Default: cloudonedemo
+    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name
+      can include numbers, lowercase letters, uppercase letters, and hyphens (-).
+      It cannot start or end with a hyphen (-).
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/.]*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), dots(.) and forward slash (/).
+    Default: "cloudone-serverless-demo/"
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and
+      forward slash (/).
+    Type: String
+
+Resources:
+  SSMGetResponseRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: SSMGetResponsePolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "ssm:*"
+                  - "logs:*"
+                Resource: "*"
+
+  SSMGetResponseLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub '${QSS3BucketName}'
+        S3Key: !Sub '${QSS3KeyPrefix}scripts/python/lambda/lambda-get-command-invocation.py.zip'        
+      Handler: lambda-get-command-invocation.lambda_handler
+      Runtime: python3.8
+      Environment:
+        Variables:
+          PLUGIN_NAME: 'runShellScript'
+          REGION_NAME: !Ref 'AWS::Region'
+          SLEEP_TIMER: 3
+      Role: !GetAtt SSMGetResponseRole.Arn
+      MemorySize: 128
+      Timeout: 30
+
+# Outputs
+Outputs:
+  SSMGetResponseLambdaFunctionArn:
+    Value: !GetAtt SSMGetResponseLambdaFunction.Arn
+    Description: "ARN of the Lambda function that fetches the SSM Run Command Invocation response" 

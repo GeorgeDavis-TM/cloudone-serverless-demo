@@ -505,7 +505,7 @@ Resources:
               "name='SENSOR'"
         mainSteps:
           - action: 'aws:runShellScript'
-            name: runCommands
+            name: runShellScript
             inputs:
               timeoutSeconds: '60'
               runCommand:

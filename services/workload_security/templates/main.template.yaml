@@ -393,7 +393,7 @@ Resources:
         description: 2. Install Virtualenv        
         mainSteps:
           - action: 'aws:runShellScript'
-            name: runCommands
+            name: runShellScript
             inputs:
               timeoutSeconds: '60'
               runCommand:

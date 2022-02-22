@@ -42,9 +42,10 @@ Resources:
             Statement:
               - Effect: "Allow"
                 Action:
-                  - "ssm:*"
-                  - "logs:*"
-                  - "ec2:DescribeInstances"
+                  - 'ssm:SendCommand'
+                  - 'ssm:GetCommandInvocation'
+                  - 'logs:*'
+                  - 'ec2:DescribeInstances'
                 Resource: "*"
 
   SSMGetResponseLambdaFunction:

@@ -62,7 +62,7 @@ Resources:
           SLEEP_TIMER: 3
       Role: !GetAtt SSMGetResponseRole.Arn
       MemorySize: 128
-      Timeout: 30
+      Timeout: 180
 
 # Outputs
 Outputs:

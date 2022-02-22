@@ -35,10 +35,10 @@ def lambda_handler(event, context):
             instanceId = ec2Instances[0]["InstanceId"]
         else:
             raise Exception("Multiple instances found. Reduce the number of stack(s) deployed and try again.")
-    
-        ssmClient = boto3.client('ssm', region_name=regionName)
 
         time.sleep(sleepTimer)
+    
+        ssmClient = boto3.client('ssm', region_name=regionName)        
         
         waiter = ssmClient.get_waiter('command_executed')
         

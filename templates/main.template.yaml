@@ -87,7 +87,7 @@ Resources:
     Properties:
       Parameters:
         QSS3BucketName: !Sub '${QSS3BucketName}'
-        QSS3KeyPrefix: !Sub '${QSS3KeyPrefix}'
+        QSS3KeyPrefix: !Sub '${QSS3KeyPrefix}/'
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}services/file_storage_security/templates/main.template.yaml'
 
   # NetworkSecurityStack:
@@ -176,6 +176,14 @@ Resources:
     Properties:
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}utils/ec2keypair/ec2keypair.template.yaml'
       TimeoutInMinutes: 20
+
+  SSMGetResponseStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:      
+      Parameters:
+        QSS3BucketName: !Sub '${QSS3BucketName}'
+        QSS3KeyPrefix: !Sub '${QSS3KeyPrefix}/'
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}utils/ssmresponse/ssmresponse.template.yaml'
 
 Outputs:
   VPCCIDR: 

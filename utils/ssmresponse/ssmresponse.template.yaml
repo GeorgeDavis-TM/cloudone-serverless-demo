@@ -44,6 +44,7 @@ Resources:
                 Action:
                   - "ssm:*"
                   - "logs:*"
+                  - "ec2:DescribeInstances"
                 Resource: "*"
 
   SSMGetResponseLambdaFunction:

@@ -63,7 +63,6 @@ def lambda_handler(event, context):
 
         if getCommandInvocationResponse["Status"] == "Success":
             print("Success: " + getCommandInvocationResponse["StandardOutputContent"] + " - " + getCommandInvocationResponse["StandardOutputUrl"])
-            response = "Success: " + getCommandInvocationResponse["StandardOutputContent"] + " - " + getCommandInvocationResponse["StandardOutputUrl"])
             return True
         else:
             raise Exception("Error: " + getCommandInvocationResponse["StandardErrorContent"] + " - " + getCommandInvocationResponse["StandardErrorUrl"])

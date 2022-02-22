@@ -21,3 +21,4 @@ var/
 
 # macOS files
 .dccache
+**/.DS_Store

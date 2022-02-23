@@ -191,7 +191,7 @@ Resources:
       Parameters:
         QSS3BucketName: !Sub '${QSS3BucketName}'
         QSS3KeyPrefix: !Sub '${QSS3KeyPrefix}'
-        SSMGetResponseLambdaFunctionArn: !Ref SSMGetResponseStack.Outputs.SSMGetResponseLambdaFunctionArn
+        SSMGetResponseLambdaFunctionArn: !GetAtt SSMGetResponseStack.Outputs.SSMGetResponseLambdaFunctionArn
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/step_functions/templates/main.template.yaml'
 
   APIGatewayStack:
@@ -200,8 +200,7 @@ Resources:
       Parameters:
         QSS3BucketName: !Sub '${QSS3BucketName}'
         QSS3KeyPrefix: !Sub '${QSS3KeyPrefix}'
-        SSMGetResponseLambdaFunctionArn: !Ref SSMGetResponseStack.Outputs.SSMGetResponseLambdaFunctionArn
-      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/step_functions/templates/main.template.yaml'
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/api_gateway/templates/main.template.yaml'
 
 Outputs:
   VPCCIDR: 

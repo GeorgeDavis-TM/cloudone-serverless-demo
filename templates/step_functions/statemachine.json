@@ -1,0 +1,322 @@
+{
+    "Comment": "CloudOneServerlessDemo is a state machine for Cloud One demos.",
+    "StartAt": "InstallTools",
+    "States": {
+        "InstallTools": {
+            "Type": "Task",
+            "Next": "WaitForSSM-InstallTools",
+            "Parameters": {
+                "DocumentName": "InstallTools",
+                "Targets": [
+                    {
+                        "Key": "tag:Owner",
+                        "Values": [
+                            "TrendMicro"
+                        ]
+                    },
+                    {
+                        "Key": "tag:Product",
+                        "Values": [
+                            "cloudone-serverless-demo"
+                        ]
+                    },
+                    {
+                        "Key": "tag:Name",
+                        "Values": [
+                            "cloudone-serverless-demo"
+                        ]
+                    }
+                ]
+            },
+            "Resource": "arn:aws:states:::aws-sdk:ssm:sendCommand"
+        },
+        "WaitForSSM-InstallTools": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "${SSMGetResponseLambdaFunction}"
+            },
+            "Retry": [
+                {
+                    "ErrorEquals": [
+                        "Lambda.ServiceException",
+                        "Lambda.AWSLambdaException",
+                        "Lambda.SdkClientException"
+                    ],
+                    "IntervalSeconds": 2,
+                    "MaxAttempts": 6,
+                    "BackoffRate": 2
+                }
+            ],
+            "Next": "InstallNodejs"
+        },
+        "InstallNodejs": {
+            "Type": "Task",
+            "Next": "WaitForSSM-InstallNodejs",
+            "Parameters": {
+                "DocumentName": "InstallNodejs",
+                "Targets": [
+                    {
+                        "Key": "tag:Owner",
+                        "Values": [
+                            "TrendMicro"
+                        ]
+                    },
+                    {
+                        "Key": "tag:Product",
+                        "Values": [
+                            "cloudone-serverless-demo"
+                        ]
+                    },
+                    {
+                        "Key": "tag:Name",
+                        "Values": [
+                            "cloudone-serverless-demo"
+                        ]
+                    }
+                ]
+            },
+            "Resource": "arn:aws:states:::aws-sdk:ssm:sendCommand"
+        },
+        "WaitForSSM-InstallNodejs": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "${SSMGetResponseLambdaFunction}"
+            },
+            "Retry": [
+                {
+                    "ErrorEquals": [
+                        "Lambda.ServiceException",
+                        "Lambda.AWSLambdaException",
+                        "Lambda.SdkClientException"
+                    ],
+                    "IntervalSeconds": 2,
+                    "MaxAttempts": 6,
+                    "BackoffRate": 2
+                }
+            ],
+            "Next": "InstallVenv"
+        },
+        "InstallVenv": {
+            "Type": "Task",
+            "Next": "WaitForSSM-InstallVenv",
+            "Parameters": {
+                "DocumentName": "InstallVenv",
+                "Targets": [
+                    {
+                        "Key": "tag:Owner",
+                        "Values": [
+                            "TrendMicro"
+                        ]
+                    },
+                    {
+                        "Key": "tag:Product",
+                        "Values": [
+                            "cloudone-serverless-demo"
+                        ]
+                    },
+                    {
+                        "Key": "tag:Name",
+                        "Values": [
+                            "cloudone-serverless-demo"
+                        ]
+                    }
+                ]
+            },
+            "Resource": "arn:aws:states:::aws-sdk:ssm:sendCommand"
+        },
+        "WaitForSSM-InstallVenv": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "${SSMGetResponseLambdaFunction}"
+            },
+            "Retry": [
+                {
+                    "ErrorEquals": [
+                        "Lambda.ServiceException",
+                        "Lambda.AWSLambdaException",
+                        "Lambda.SdkClientException"
+                    ],
+                    "IntervalSeconds": 2,
+                    "MaxAttempts": 6,
+                    "BackoffRate": 2
+                }
+            ],
+            "Next": "RunWSSensorCheck"
+        },
+        "RunWSSensorCheck": {
+            "Type": "Task",
+            "Next": "WaitForSSM-RunWSSensorCheck",
+            "Parameters": {
+                "DocumentName": "RunWSSensorCheck",
+                "Targets": [
+                    {
+                        "Key": "tag:Owner",
+                        "Values": [
+                            "TrendMicro"
+                        ]
+                    },
+                    {
+                        "Key": "tag:Product",
+                        "Values": [
+                            "cloudone-serverless-demo"
+                        ]
+                    },
+                    {
+                        "Key": "tag:Name",
+                        "Values": [
+                            "cloudone-serverless-demo"
+                        ]
+                    }
+                ]
+            },
+            "Resource": "arn:aws:states:::aws-sdk:ssm:sendCommand"
+        },
+        "WaitForSSM-RunWSSensorCheck": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "OutputPath": "$.Payload",
+            "Parameters": {
+                "Payload.$": "$",
+                "FunctionName": "${SSMGetResponseLambdaFunction}"
+            },
+            "Retry": [
+                {
+                    "ErrorEquals": [
+                        "Lambda.ServiceException",
+                        "Lambda.AWSLambdaException",
+                        "Lambda.SdkClientException"
+                    ],
+                    "IntervalSeconds": 2,
+                    "MaxAttempts": 6,
+                    "BackoffRate": 2
+                }
+            ],
+            "Next": "Branch Out"
+        },
+        "Branch Out": {
+            "Type": "Parallel",
+            "Branches": [
+                {
+                    "StartAt": "DeployWS",
+                    "States": {
+                        "DeployWS": {
+                            "Type": "Task",
+                            "Parameters": {
+                                "DocumentName": "DeployWS",
+                                "Targets": [
+                                    {
+                                        "Key": "tag:Owner",
+                                        "Values": [
+                                            "TrendMicro"
+                                        ]
+                                    },
+                                    {
+                                        "Key": "tag:Product",
+                                        "Values": [
+                                            "cloudone-serverless-demo"
+                                        ]
+                                    },
+                                    {
+                                        "Key": "tag:Name",
+                                        "Values": [
+                                            "cloudone-serverless-demo"
+                                        ]
+                                    }
+                                ]
+                            },
+                            "Resource": "arn:aws:states:::aws-sdk:ssm:sendCommand",
+                            "Next": "WaitForSSM-DeployWS"
+                        },
+                        "WaitForSSM-DeployWS": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::lambda:invoke",
+                            "OutputPath": "$.Payload",
+                            "Parameters": {
+                                "Payload.$": "$",
+                                "FunctionName": "${SSMGetResponseLambdaFunction}"
+                            },
+                            "Retry": [
+                                {
+                                    "ErrorEquals": [
+                                        "Lambda.ServiceException",
+                                        "Lambda.AWSLambdaException",
+                                        "Lambda.SdkClientException"
+                                    ],
+                                    "IntervalSeconds": 2,
+                                    "MaxAttempts": 6,
+                                    "BackoffRate": 2
+                                }
+                            ],
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "DeployFSS",
+                    "States": {
+                        "DeployFSS": {
+                            "Type": "Task",
+                            "Parameters": {
+                                "DocumentName": "DeployFSS",
+                                "Targets": [
+                                    {
+                                        "Key": "tag:Owner",
+                                        "Values": [
+                                            "TrendMicro"
+                                        ]
+                                    },
+                                    {
+                                        "Key": "tag:Product",
+                                        "Values": [
+                                            "cloudone-serverless-demo"
+                                        ]
+                                    },
+                                    {
+                                        "Key": "tag:Name",
+                                        "Values": [
+                                            "cloudone-serverless-demo"
+                                        ]
+                                    }
+                                ]
+                            },
+                            "Resource": "arn:aws:states:::aws-sdk:ssm:sendCommand",
+                            "Next": "WaitForSSM-DeployFSS"
+                        },
+                        "WaitForSSM-DeployFSS": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::lambda:invoke",
+                            "OutputPath": "$.Payload",
+                            "Parameters": {
+                                "Payload.$": "$",
+                                "FunctionName": "${SSMGetResponseLambdaFunction}"
+                            },
+                            "Retry": [
+                                {
+                                    "ErrorEquals": [
+                                        "Lambda.ServiceException",
+                                        "Lambda.AWSLambdaException",
+                                        "Lambda.SdkClientException"
+                                    ],
+                                    "IntervalSeconds": 2,
+                                    "MaxAttempts": 6,
+                                    "BackoffRate": 2
+                                }
+                            ],
+                            "End": true
+                        }
+                    }
+                }
+            ],
+            "End": true
+        }
+    }
+}

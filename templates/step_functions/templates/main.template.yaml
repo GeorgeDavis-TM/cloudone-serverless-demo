@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A Step Functions state machine for Cloud One Serverless Demo.
+Parameters:
+  # S3 Bucket Path  
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
+      (-).
+    Default: cloudonedemo
+    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name
+      can include numbers, lowercase letters, uppercase letters, and hyphens (-).
+      It cannot start or end with a hyphen (-).
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/.]*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), dots(.) and forward slash (/).
+    Default: "cloudone-serverless-demo/"
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and
+      forward slash (/).
+    Type: String
+  SSMGetResponseLambdaFunctionArn:
+    ConstraintDescription: must be a valid AWS ARN
+    Description: ARN of the Lambda function that fetches the SSM Run Command Invocation response.
+    Type: String
+
+Resources:
+  C1SDIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: cloudone-serverless-demo-statemachine-IAM-Role
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AdministratorAccess'
+      Path: /
+      RoleName: cloudone-serverless-demo-statemachine-IAM-Role
+      Tags:
+        - Key: Owner
+          Value: TrendMicro
+        - Key: Product
+          Value: cloudone-serverless-demo
+        - Key: Name
+          Value: cloudone-serverless-demo
+
+  C1SDStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: CloudOneServerlessDemo
+      DefinitionS3Location:
+        Bucket: !Sub '${QSS3BucketName}'
+        Key: !Sub '${QSS3KeyPrefix}templates/step_functions/statemachine.json'           
+      DefinitionSubstitutions:
+        SSMGetResponseLambdaFunction: !Ref SSMGetResponseLambdaFunctionArn
+      RoleArn: !GetAtt C1SDIAMRole.Arn

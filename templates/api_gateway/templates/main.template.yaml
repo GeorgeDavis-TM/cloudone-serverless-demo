@@ -21,70 +21,75 @@ Parameters:
       can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and
       forward slash (/).
     Type: String
+  C1SDStateMachineArn:
+    ConstraintDescription: must be a valid AWS ARN
+    Description: ARN of the State Machine that runs the Cloud One Serverless Demo workflow.
+    Type: String
 
 Resources:
-  APIGateway:
+  APIGatewayRestApi:
     Type: AWS::ApiGateway::RestApi
     Properties:
-      Body:
-        swagger: '2.0'
-        info:
-          description: Cloud One Serverless Demo API with Amazon API Gateway.
-          title: CloudOneServerlessDemoAPI
-        schemes:
-          - https
-        paths:
-          /:
-            get:
-              tags:
-                - pets
-              description: CloudOneServerlessDemo HTML web page containing API usage information
-              consumes:
-                - application/json
-              produces:
-                - text/html
-              responses:
-                '200':
-                  description: Successful operation
-                  headers:
-                    Content-Type:
-                      type: string
-                      description: Media type of request
-              x-amazon-apigateway-integration:
-                responses:
-                  default:
-                    statusCode: '200'
-                    responseParameters:
-                      method.response.header.Content-Type: '''text/html'''
-                    responseTemplates:
-                      text/html: |-
-                        <html>
-                            <head>
-                              <style>
-                                body {
-                                    color: #333;
-                                    font-family: Sans-serif;
-                                    max-width: 800px;
-                                    margin: auto;
-                                }
-                              </style>
-                            </head>
-                            <body>
-                                <h1>Welcome to the CloudOneServerlessDemo API</h1>
-                                <p>
-                                    You have successfully deployed the CloudOneServerlessDemo API. You are seeing this HTML page because the <code>GET</code> method to the root resource of your API returns this content as a Mock integration.
-                                </p>                               
-                            </body>
-                        </html>
-                passthroughBehavior: when_no_match
-                requestTemplates:
-                  application/json: '{"statusCode": 200}'
-                type: mock
+      # Body:
+      #   swagger: '2.0'
+      #   info:
+      #     description: Cloud One Serverless Demo API with Amazon API Gateway.
+      #     title: CloudOneServerlessDemoAPI
+      #   schemes:
+      #     - https
+      #   paths:
+      #     /:
+      #       get:
+      #         tags:
+      #           - pets
+      #         description: CloudOneServerlessDemo HTML web page containing API usage information
+      #         consumes:
+      #           - application/json
+      #         produces:
+      #           - text/html
+      #         responses:
+      #           '200':
+      #             description: Successful operation
+      #             headers:
+      #               Content-Type:
+      #                 type: string
+      #                 description: Media type of request
+      #         x-amazon-apigateway-integration:
+      #           responses:
+      #             default:
+      #               statusCode: '200'
+      #               responseParameters:
+      #                 method.response.header.Content-Type: '''text/html'''
+      #               responseTemplates:
+      #                 text/html: |-
+      #                   <html>
+      #                       <head>
+      #                         <style>
+      #                           body {
+      #                               color: #333;
+      #                               font-family: Sans-serif;
+      #                               max-width: 800px;
+      #                               margin: auto;
+      #                           }
+      #                         </style>
+      #                       </head>
+      #                       <body>
+      #                           <h1>Welcome to the CloudOneServerlessDemo API</h1>
+      #                           <p>
+      #                               You have successfully deployed the CloudOneServerlessDemo API. You are seeing this HTML page because the <code>GET</code> method to the root resource of your API returns this content as a Mock integration.
+      #                           </p>                               
+      #                       </body>
+      #                   </html>
+      #           passthroughBehavior: when_no_match
+      #           requestTemplates:
+      #             application/json: '{"statusCode": 200}'
+      #           type: mock
       Name: CloudOneServerlessDemoAPI      
+      Description: Cloud One Serverless Demo API
       EndpointConfiguration:
           Types: 
             - REGIONAL
-      Description: Cloud One Serverless Demo API        
+      ApiKeySourceType: HEADER
       Tags:
         - Key: Owner
           Value: TrendMicro
@@ -92,6 +97,109 @@ Resources:
           Value: cloudone-serverless-demo
         - Key: Name
           Value: cloudone-serverless-demo
+
+  APIGatewayResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt APIGatewayRestApi.RootResourceId
+      PathPart: 'lambda'
+      RestApiId: !Ref APIGatewayRestApi
+
+  APIGatewayMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: POST
+      Integration:
+        ConnectionType: INTERNET
+        Credentials: !GetAtt APIGatewayIAMRole.Arn
+        IntegrationHttpMethod: POST
+        PassthroughBehavior: WHEN_NO_MATCH
+        TimeoutInMillis: 29000
+        Type: AWS_PROXY
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TriggerLambdaFunction.Arn}/invocations'
+      OperationName: 'lambda'
+      ResourceId: !Ref APIGatewayResource
+      RestApiId: !Ref APIGatewayRestApi
+
+  APIGatewayIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: ''
+            Effect: 'Allow'
+            Principal:
+              Service:
+                - 'apigateway.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+      Path: '/'
+      Policies:
+        - PolicyName: LambdaAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action: 'lambda:*'
+                Resource: !GetAtt TriggerLambdaFunction.Arn
+
+  TriggerLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          import boto3          
+          def handler(event, context):
+            regionName = str(os.environ.get("REGION_NAME")) if 'REGION_NAME' in os.environ else None
+            stateMachineArn = str(os.environ.get("STATE_MACHINE_ARN")) if 'STATE_MACHINE_ARN' in os.environ else None
+            if regionName:
+              statesClient = boto3.client('stepfunctions', region_name=regionName)
+              stateMachineStartExecutionResponse = statesClient.start_execution(
+                stateMachineArn=stateMachineArn               
+              )
+              print(str(stateMachineStartExecutionResponse))              
+              response = {
+                'isBase64Encoded': False,
+                'statusCode': 200,
+                'headers': {},
+                'multiValueHeaders': {},
+                'body': str(stateMachineStartExecutionResponse)
+              }
+              return response        
+      Description: AWS Lambda function to trigger the AWS State Machine workflow - C1SDStateMachine
+      FunctionName: TriggerLambdaFunction-C1SDStateMachine
+      Handler: index.handler
+      MemorySize: 128
+      Runtime: python3.8
+      Environment:
+        Variables:
+          REGION_NAME: !Ref "AWS::Region"
+          STATE_MACHINE_ARN: !Ref C1SDStateMachineArn
+      Role: !GetAtt TriggerLambdaIAMRole.Arn      
+      Timeout: 180
+
+  TriggerLambdaIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service:
+                - 'lambda.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+          - Effect: Allow
+            Principal:
+              Service:
+                - 'lambda.amazonaws.com'
+            Action:
+              - 'states:*'
+      Path: '/'
 
 # Outputs
 Outputs:

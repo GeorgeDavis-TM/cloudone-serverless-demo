@@ -199,6 +199,7 @@ Resources:
       Parameters:
         QSS3BucketName: !Sub '${QSS3BucketName}'
         QSS3KeyPrefix: !Sub '${QSS3KeyPrefix}'
+        C1SDStateMachineArn: !Sub '${StateMachineStack.Outputs.C1SDStateMachineArn}'
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/api_gateway/templates/main.template.yaml'
 
 Outputs:

@@ -92,3 +92,13 @@ Resources:
           Value: cloudone-serverless-demo
         - Key: Name
           Value: cloudone-serverless-demo
+
+# Outputs
+Outputs:
+  APIGatewayArn:
+    Value: !GetAtt APIGateway.Arn
+    Description: "ARN of the API Gateway created for the CloudOneServerlessDemo API"
+
+  APIGatewayInvokeURL:
+    Value: !Sub https://${APIGatewayArn}.execute-api.${AWS::Region}.amazonaws.com/    
+    Description: "REST API Endpoint of the API Gateway that can be used to trigger the SSM Run Command Invocation"

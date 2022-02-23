@@ -62,3 +62,9 @@ Resources:
       DefinitionSubstitutions:
         SSMGetResponseLambdaFunction: !Ref SSMGetResponseLambdaFunctionArn
       RoleArn: !GetAtt C1SDIAMRole.Arn
+
+# Outputs
+Outputs:
+  C1SDStateMachineArn:
+    Value: !GetAtt C1SDStateMachine.Arn
+    Description: "ARN of the AWS State Machine that runs the CloudOneServerlessDemo workflow." 

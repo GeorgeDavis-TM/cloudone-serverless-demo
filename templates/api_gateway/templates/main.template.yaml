@@ -193,12 +193,15 @@ Resources:
                 - 'lambda.amazonaws.com'
             Action:
               - 'sts:AssumeRole'
-          - Effect: Allow
-            Principal:
-              Service:
-                - 'lambda.amazonaws.com'
-            Action:
-              - 'states:*'
+      Policies:
+        - PolicyName: stateMachineTriggerPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - 'states:*'
+                Resource: "*"          
       Path: '/'
 
 # Outputs

@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: API Gateway for Cloud One Serverless Demo.
+Parameters:
+  # S3 Bucket Path  
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
+      (-).
+    Default: cloudonedemo
+    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name
+      can include numbers, lowercase letters, uppercase letters, and hyphens (-).
+      It cannot start or end with a hyphen (-).
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/.]*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), dots(.) and forward slash (/).
+    Default: "cloudone-serverless-demo/"
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and
+      forward slash (/).
+    Type: String
+
+Resources:
+  APIGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Body:
+        OpenAPI specification: null
+      Description: Cloud One Serverless Demo API
+      Name: CloudOneServerlessDemoAPI      
+      Tags:
+        - Key: Owner
+          Value: TrendMicro
+        - Key: Product
+          Value: cloudone-serverless-demo
+        - Key: Name
+          Value: cloudone-serverless-demo

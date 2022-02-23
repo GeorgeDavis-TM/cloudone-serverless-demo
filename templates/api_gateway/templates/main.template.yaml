@@ -27,7 +27,6 @@ Resources:
     Type: AWS::ApiGateway::RestApi
     Properties:
       Body:
-        Body:
         swagger: '2.0'
         info:
           description: Cloud One Serverless Demo API with Amazon API Gateway.

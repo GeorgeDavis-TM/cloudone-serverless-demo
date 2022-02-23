@@ -40,7 +40,6 @@ Mappings:
     # ap-east-1:
     #   AZs: 'ap-east-1a,ap-east-1b,ap-east-1c'
     # me-south-1:
-    
 
 Parameters:
   QSS3BucketName:
@@ -206,6 +205,7 @@ Outputs:
   VPCCIDR: 
     Value: !GetAtt VPCStack.Outputs.VPCCIDR
     Description: VPC CIDR
+  
   VPCID:
     Value: !GetAtt VPCStack.Outputs.VPCID
     Description: VPC ID
@@ -282,3 +282,6 @@ Outputs:
 #     Value: !GetAtt WorkloadSecurityStack.Outputs.SecretKeyforC1WS
 #   TopicARNforC1WS:
 #     Value: !GetAtt WorkloadSecurityStack.Outputs.TopicARNforC1WS
+
+  RESTAPIEndpointUrl:
+    Value: !GetAtt APIGatewayStack.Outputs.APIGatewayInvokeURL

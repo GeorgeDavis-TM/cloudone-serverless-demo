@@ -98,29 +98,21 @@ Resources:
         - Key: Name
           Value: cloudone-serverless-demo
 
-  APIGatewayResource:
-    Type: AWS::ApiGateway::Resource
-    Properties:
-      ParentId: !GetAtt APIGatewayRestApi.RootResourceId
-      PathPart: 'lambda'
-      RestApiId: !Ref APIGatewayRestApi
-
   APIGatewayMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       ApiKeyRequired: false
       AuthorizationType: NONE
-      HttpMethod: POST
+      HttpMethod: GET
       Integration:
         ConnectionType: INTERNET
         Credentials: !GetAtt APIGatewayIAMRole.Arn
-        IntegrationHttpMethod: POST
+        IntegrationHttpMethod: GET
         PassthroughBehavior: WHEN_NO_MATCH
         TimeoutInMillis: 29000
         Type: AWS_PROXY
         Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TriggerLambdaFunction.Arn}/invocations'
-      OperationName: 'lambda'
-      ResourceId: !Ref APIGatewayResource
+      ResourceId: !GetAtt APIGatewayRestApi.RootResourceId
       RestApiId: !Ref APIGatewayRestApi
 
   APIGatewayIAMRole:

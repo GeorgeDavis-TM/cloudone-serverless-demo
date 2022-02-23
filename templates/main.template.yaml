@@ -185,6 +185,24 @@ Resources:
         QSS3KeyPrefix: !Sub '${QSS3KeyPrefix}'
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}utils/ssmresponse/ssmresponse.template.yaml'
 
+  StateMachineStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:      
+      Parameters:
+        QSS3BucketName: !Sub '${QSS3BucketName}'
+        QSS3KeyPrefix: !Sub '${QSS3KeyPrefix}'
+        SSMGetResponseLambdaFunctionArn: !Ref SSMGetResponseStack.Outputs.SSMGetResponseLambdaFunctionArn
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/step_functions/templates/main.template.yaml'
+
+  APIGatewayStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:      
+      Parameters:
+        QSS3BucketName: !Sub '${QSS3BucketName}'
+        QSS3KeyPrefix: !Sub '${QSS3KeyPrefix}'
+        SSMGetResponseLambdaFunctionArn: !Ref SSMGetResponseStack.Outputs.SSMGetResponseLambdaFunctionArn
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/step_functions/templates/main.template.yaml'
+
 Outputs:
   VPCCIDR: 
     Value: !GetAtt VPCStack.Outputs.VPCCIDR

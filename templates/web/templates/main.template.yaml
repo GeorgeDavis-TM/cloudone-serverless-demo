@@ -60,41 +60,41 @@ Resources:
           import boto3
 
           def handler(event, context):
-              regionName = str(os.environ.get("CUSTOM_REGION_NAME")) if 'CUSTOM_REGION_NAME' in os.environ else None
-              srcS3Bucket = str(os.environ.get("CUSTOM_S3_SRC_BUCKET")) if 'CUSTOM_S3_SRC_BUCKET' in os.environ else None
-              srcS3KeyPrefix = str(os.environ.get("CUSTOM_S3_KEY_PREFIX")) if 'CUSTOM_S3_KEY_PREFIX' in os.environ else None
-              destS3Bucket = str(os.environ.get("CUSTOM_S3_DEST_BUCKET")) if 'CUSTOM_S3_DEST_BUCKET' in os.environ else None
-              s3ObjectList = str(os.environ.get("CUSTOM_S3_OBJECT_LIST")) if 'CUSTOM_S3_OBJECT_LIST' in os.environ else None
+            regionName = str(os.environ.get("CUSTOM_REGION_NAME")) if 'CUSTOM_REGION_NAME' in os.environ else None
+            srcS3Bucket = str(os.environ.get("CUSTOM_S3_SRC_BUCKET")) if 'CUSTOM_S3_SRC_BUCKET' in os.environ else None
+            srcS3KeyPrefix = str(os.environ.get("CUSTOM_S3_KEY_PREFIX")) if 'CUSTOM_S3_KEY_PREFIX' in os.environ else None
+            destS3Bucket = str(os.environ.get("CUSTOM_S3_DEST_BUCKET")) if 'CUSTOM_S3_DEST_BUCKET' in os.environ else None
+            s3ObjectList = str(os.environ.get("CUSTOM_S3_OBJECT_LIST")) if 'CUSTOM_S3_OBJECT_LIST' in os.environ else None
 
-              if s3ObjectList[-1] == ",":
-                  s3ObjectList = s3ObjectList[:-1].replace(" ", "").split(",")
-              else:
-                  s3ObjectList = s3ObjectList.replace(" ", "").split(",")
+            if s3ObjectList[-1] == ",":
+              s3ObjectList = s3ObjectList[:-1].replace(" ", "").split(",")
+            else:
+              s3ObjectList = s3ObjectList.replace(" ", "").split(",")
 
-              if regionName and srcS3Bucket and destS3Bucket and s3ObjectList:
+            if regionName and srcS3Bucket and destS3Bucket and s3ObjectList:
 
-                  s3Client = boto3.client('s3', region_name=regionName)
+              s3Client = boto3.client('s3', region_name=regionName)
 
-                  for s3ObjKey in s3ObjectList:
+              for s3ObjKey in s3ObjectList:
 
-                      srcS3ObjKey = None
-                      if srcS3KeyPrefix:
-                          srcS3ObjKey = srcS3KeyPrefix + s3ObjKey
-                      else:
-                          srcS3ObjKey = s3ObjKey
+                srcS3ObjKey = None
+                if srcS3KeyPrefix:
+                  srcS3ObjKey = srcS3KeyPrefix + s3ObjKey
+                else:
+                  srcS3ObjKey = s3ObjKey
 
-                      s3CopyObjectResponse = s3Client.copy_object(
-                          ACL='public-read',
-                          Bucket=destS3Bucket,
-                          ContentType='text/html',
-                          CopySource={
-                              'Bucket': srcS3Bucket,
-                              'Key': srcS3ObjKey
-                          },
-                          Key=s3ObjKey
-                      )
+                s3CopyObjectResponse = s3Client.copy_object(
+                  ACL='public-read',
+                  Bucket=destS3Bucket,
+                  ContentType='text/html',
+                  CopySource={
+                    'Bucket': srcS3Bucket,
+                    'Key': srcS3ObjKey
+                  },
+                  Key=s3ObjKey
+                )
 
-                      print(str(s3CopyObjectResponse))   
+                print(str(s3CopyObjectResponse))   
       Description: AWS Lambda function to trigger the AWS State Machine workflow - C1SDStateMachine
       FunctionName: TriggerLambdaFunction-C1SDStateMachine
       Handler: index.handler
@@ -156,39 +156,39 @@ Resources:
           import boto3
 
           def handler(event, context):
-              regionName = str(os.environ.get("CUSTOM_REGION_NAME")) if 'CUSTOM_REGION_NAME' in os.environ else None
-              s3Bucket = str(os.environ.get("CUSTOM_S3_BUCKET")) if 'CUSTOM_S3_BUCKET' in os.environ else None
-              s3ObjectList = str(os.environ.get("CUSTOM_S3_OBJECT_LIST")) if 'CUSTOM_S3_OBJECT_LIST' in os.environ else None
-              apiGatewayInvokeUrl = str(os.environ.get("CUSTOM_INVOKE_URL")) if 'CUSTOM_INVOKE_URL' in os.environ else None
+            regionName = str(os.environ.get("CUSTOM_REGION_NAME")) if 'CUSTOM_REGION_NAME' in os.environ else None
+            s3Bucket = str(os.environ.get("CUSTOM_S3_BUCKET")) if 'CUSTOM_S3_BUCKET' in os.environ else None
+            s3ObjectList = str(os.environ.get("CUSTOM_S3_OBJECT_LIST")) if 'CUSTOM_S3_OBJECT_LIST' in os.environ else None
+            apiGatewayInvokeUrl = str(os.environ.get("CUSTOM_INVOKE_URL")) if 'CUSTOM_INVOKE_URL' in os.environ else None
 
-              if s3ObjectList[-1] == ",":
-                  s3ObjectList = s3ObjectList[:-1].replace(" ", "").split(",")
-              else:
-                  s3ObjectList = s3ObjectList.replace(" ", "").split(",")
+            if s3ObjectList[-1] == ",":
+              s3ObjectList = s3ObjectList[:-1].replace(" ", "").split(",")
+            else:
+              s3ObjectList = s3ObjectList.replace(" ", "").split(",")
 
-              if regionName and s3Bucket and s3ObjectList and apiGatewayInvokeUrl:
+            if regionName and s3Bucket and s3ObjectList and apiGatewayInvokeUrl:
 
-                  envDict = {}
-                  for key in os.environ.items():            
-                      if "CUSTOM_" in key[0]:
-                          envDict.update({key[0]: key[1]})
+              envDict = {}
+              for key in os.environ.items():            
+                if "CUSTOM_" in key[0]:
+                  envDict.update({key[0]: key[1]})
 
-                  s3ResourceClient = boto3.resource('s3', region_name=regionName)
+              s3ResourceClient = boto3.resource('s3', region_name=regionName)
 
-                  for s3ObjKey in s3ObjectList:
-                      s3Object = s3ResourceClient.Object(s3Bucket, s3ObjKey)
+              for s3ObjKey in s3ObjectList:
+                s3Object = s3ResourceClient.Object(s3Bucket, s3ObjKey)
 
-                      fileContents = s3Object.get()['Body'].read().decode('utf-8')
+                fileContents = s3Object.get()['Body'].read().decode('utf-8')
 
-                      for env in envDict:                
-                          if env in fileContents:
-                              fileContents = fileContents.replace(env, envDict[env])            
+                for env in envDict:                
+                  if env in fileContents:
+                    fileContents = fileContents.replace(env, envDict[env])            
 
-                      s3Object.put(
-                          Body=fileContents,
-                          ACL='public-read',
-                          ContentType='text/html'
-                      )  
+                s3Object.put(
+                  Body=fileContents,
+                  ACL='public-read',
+                  ContentType='text/html'
+                )  
       Description: AWS Lambda function to trigger the AWS State Machine workflow - C1SDStateMachine
       FunctionName: TriggerLambdaFunction-C1SDStateMachine
       Handler: index.handler

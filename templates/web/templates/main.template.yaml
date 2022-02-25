@@ -58,6 +58,7 @@ Resources:
         ZipFile: |          
           import os
           import boto3
+          import cfnresponse
 
           def handler(event, context):
             regionName = str(os.environ.get("CUSTOM_REGION_NAME")) if 'CUSTOM_REGION_NAME' in os.environ else None
@@ -94,9 +95,13 @@ Resources:
                   Key=s3ObjKey
                 )
 
-                print(str(s3CopyObjectResponse))   
+                print(str(s3CopyObjectResponse))
+                cfnresponse.send(event, context, cfnresponse.SUCCESS, s3CopyObjectResponse)
+
+            else:
+              cfnresponse.send(event, context, cfnresponse.FAILED, {})
       Description: AWS Lambda function to trigger the AWS State Machine workflow - C1SDStateMachine
-      FunctionName: TriggerLambdaFunction-C1SDStateMachine
+      FunctionName: CopyFilesLambdaFunction-C1SDStateMachine
       Handler: index.handler
       MemorySize: 128
       Runtime: python3.8
@@ -186,9 +191,13 @@ Resources:
                   Body=fileContents,
                   ACL='public-read',
                   ContentType='text/html'
-                )  
+                )
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+
+            else:
+              cfnresponse.send(event, context, cfnresponse.FAILED, {})
       Description: AWS Lambda function to trigger the AWS State Machine workflow - C1SDStateMachine
-      FunctionName: TriggerLambdaFunction-C1SDStateMachine
+      FunctionName: DeployWebLambdaFunction-C1SDStateMachine
       Handler: index.handler
       MemorySize: 128
       Runtime: python3.8
@@ -239,6 +248,7 @@ Resources:
     Type: 'Custom::C1SDDeployWebCustomResource'
     Properties:
       ServiceToken: !GetAtt DeployWebLambdaFunction.Arn
+    DependsOn: CopyFilesCustomResource
 
 # Outputs
 Outputs:

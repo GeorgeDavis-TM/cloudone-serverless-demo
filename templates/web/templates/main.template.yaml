@@ -132,12 +132,12 @@ Resources:
                   - 's3:GetObject'
                   - 's3:PutObject'
                 Resource: [
-                  !Join
+                  - !Join
                     - ''
                     - - !GetAtt S3StaticWebBucket.Arn
                       - "/*"
                   ,                  
-                  !Join
+                  - !Join
                     - ''
                     - - 'arn:aws:s3:::'
                       - !Ref QSS3BucketName

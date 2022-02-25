@@ -30,60 +30,6 @@ Resources:
   APIGatewayRestApi:
     Type: AWS::ApiGateway::RestApi
     Properties:
-      # Body:
-      #   swagger: '2.0'
-      #   info:
-      #     description: Cloud One Serverless Demo API with Amazon API Gateway.
-      #     title: CloudOneServerlessDemoAPI
-      #   schemes:
-      #     - https
-      #   paths:
-      #     /:
-      #       get:
-      #         tags:
-      #           - pets
-      #         description: CloudOneServerlessDemo HTML web page containing API usage information
-      #         consumes:
-      #           - application/json
-      #         produces:
-      #           - text/html
-      #         responses:
-      #           '200':
-      #             description: Successful operation
-      #             headers:
-      #               Content-Type:
-      #                 type: string
-      #                 description: Media type of request
-      #         x-amazon-apigateway-integration:
-      #           responses:
-      #             default:
-      #               statusCode: '200'
-      #               responseParameters:
-      #                 method.response.header.Content-Type: '''text/html'''
-      #               responseTemplates:
-      #                 text/html: |-
-      #                   <html>
-      #                       <head>
-      #                         <style>
-      #                           body {
-      #                               color: #333;
-      #                               font-family: Sans-serif;
-      #                               max-width: 800px;
-      #                               margin: auto;
-      #                           }
-      #                         </style>
-      #                       </head>
-      #                       <body>
-      #                           <h1>Welcome to the CloudOneServerlessDemo API</h1>
-      #                           <p>
-      #                               You have successfully deployed the CloudOneServerlessDemo API. You are seeing this HTML page because the <code>GET</code> method to the root resource of your API returns this content as a Mock integration.
-      #                           </p>                               
-      #                       </body>
-      #                   </html>
-      #           passthroughBehavior: when_no_match
-      #           requestTemplates:
-      #             application/json: '{"statusCode": 200}'
-      #           type: mock
       Name: CloudOneServerlessDemoAPI      
       Description: Cloud One Serverless Demo API
       EndpointConfiguration:
@@ -107,7 +53,7 @@ Resources:
       Integration:
         ConnectionType: INTERNET
         Credentials: !GetAtt APIGatewayIAMRole.Arn
-        IntegrationHttpMethod: GET
+        IntegrationHttpMethod: POST
         PassthroughBehavior: WHEN_NO_MATCH
         TimeoutInMillis: 29000
         Type: AWS_PROXY
@@ -143,6 +89,7 @@ Resources:
     Properties:
       Code:
         ZipFile: |
+          import os
           import boto3          
           def handler(event, context):
             regionName = str(os.environ.get("REGION_NAME")) if 'REGION_NAME' in os.environ else None

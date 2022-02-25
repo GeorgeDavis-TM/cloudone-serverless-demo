@@ -202,6 +202,15 @@ Resources:
         C1SDStateMachineArn: !Sub '${StateMachineStack.Outputs.C1SDStateMachineArn}'
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/api_gateway/templates/main.template.yaml'
 
+  WebStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:      
+      Parameters:
+        QSS3BucketName: !Sub '${QSS3BucketName}'
+        QSS3KeyPrefix: !Sub '${QSS3KeyPrefix}'
+        APIGatewayInvokeURL: !Sub '${APIGatewayStack.Outputs.APIGatewayInvokeURL}'
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/web/templates/main.template.yaml'
+
 Outputs:
   VPCCIDR: 
     Value: !GetAtt VPCStack.Outputs.VPCCIDR

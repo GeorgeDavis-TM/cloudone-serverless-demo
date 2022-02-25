@@ -131,20 +131,18 @@ Resources:
                 Action:
                   - 's3:GetObject'
                   - 's3:PutObject'
-                Resource: [
+                Resource:
                   - !Join
                     - ''
                     - - !GetAtt S3StaticWebBucket.Arn
-                      - "/*"
-                  ,                  
+                      - "/*"                        
                   - !Join
                     - ''
                     - - 'arn:aws:s3:::'
                       - !Ref QSS3BucketName
                       - !Ref QSS3KeyPrefix
                       - 'templates/web/public_html'
-                      - "/*"
-                ]       
+                      - "/*"  
       Path: '/'
 
   DeployWebLambdaFunction:

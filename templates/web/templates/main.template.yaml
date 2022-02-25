@@ -1,0 +1,249 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: API Gateway for Cloud One Serverless Demo.
+Parameters:
+  # S3 Bucket Path  
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
+      (-).
+    Default: cloudonedemo
+    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name
+      can include numbers, lowercase letters, uppercase letters, and hyphens (-).
+      It cannot start or end with a hyphen (-).
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/.]*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), dots(.) and forward slash (/).
+    Default: "cloudone-serverless-demo/"
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and
+      forward slash (/).
+    Type: String
+  APIGatewayInvokeURL:
+    ConstraintDescription: must be a valid HTTP URL
+    Description: Invoke URL of the Cloud One Serverless Demo API Gateway instance.
+    Type: String
+
+Resources:
+  S3StaticWebBucket:
+    Type: 'AWS::S3::Bucket'    
+    Properties:
+      BucketName: cloudone-serverless-web      
+      WebsiteConfiguration:
+        ErrorDocument: 'index.html'
+        IndexDocument: 'error.html'
+
+  S3PublicReadBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties: 
+      Bucket: !Ref S3StaticWebBucket
+      PolicyDocument: 
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 's3:GetObject'
+            Effect: Allow
+            Resource: !Join
+              - ''
+              - - !GetAtt S3StaticWebBucket.Arn
+                - "/*"
+            Principal: '*'            
+
+  CopyFilesLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |          
+          import os
+          import boto3
+
+          def handler(event, context):
+              regionName = str(os.environ.get("CUSTOM_REGION_NAME")) if 'CUSTOM_REGION_NAME' in os.environ else None
+              srcS3Bucket = str(os.environ.get("CUSTOM_S3_SRC_BUCKET")) if 'CUSTOM_S3_SRC_BUCKET' in os.environ else None
+              srcS3KeyPrefix = str(os.environ.get("CUSTOM_S3_KEY_PREFIX")) if 'CUSTOM_S3_KEY_PREFIX' in os.environ else None
+              destS3Bucket = str(os.environ.get("CUSTOM_S3_DEST_BUCKET")) if 'CUSTOM_S3_DEST_BUCKET' in os.environ else None
+              s3ObjectList = str(os.environ.get("CUSTOM_S3_OBJECT_LIST")) if 'CUSTOM_S3_OBJECT_LIST' in os.environ else None
+
+              if s3ObjectList[-1] == ",":
+                  s3ObjectList = s3ObjectList[:-1].replace(" ", "").split(",")
+              else:
+                  s3ObjectList = s3ObjectList.replace(" ", "").split(",")
+
+              if regionName and srcS3Bucket and destS3Bucket and s3ObjectList:
+
+                  s3Client = boto3.client('s3', region_name=regionName)
+
+                  for s3ObjKey in s3ObjectList:
+
+                      srcS3ObjKey = None
+                      if srcS3KeyPrefix:
+                          srcS3ObjKey = srcS3KeyPrefix + s3ObjKey
+                      else:
+                          srcS3ObjKey = s3ObjKey
+
+                      s3CopyObjectResponse = s3Client.copy_object(
+                          ACL='public-read',
+                          Bucket=destS3Bucket,
+                          ContentType='text/html',
+                          CopySource={
+                              'Bucket': srcS3Bucket,
+                              'Key': srcS3ObjKey
+                          },
+                          Key=s3ObjKey
+                      )
+
+                      print(str(s3CopyObjectResponse))   
+      Description: AWS Lambda function to trigger the AWS State Machine workflow - C1SDStateMachine
+      FunctionName: TriggerLambdaFunction-C1SDStateMachine
+      Handler: index.handler
+      MemorySize: 128
+      Runtime: python3.8
+      Environment:
+        Variables:
+          CUSTOM_REGION_NAME: !Ref "AWS::Region"
+          CUSTOM_S3_SRC_BUCKET: !Ref QSS3BucketName
+          CUSTOM_S3_KEY_PREFIX: !Ref QSS3KeyPrefix
+          CUSTOM_S3_DEST_BUCKET: !Ref S3StaticWebBucket
+          CUSTOM_S3_OBJECT_LIST: 'index.html,error.html'
+      Role: !GetAtt C1SDLambdaCopyS3ObjPolicy.Arn      
+      Timeout: 180
+
+  C1SDLambdaCopyS3ObjPolicy:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service:
+                - 'lambda.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: C1SDLambdaCopyS3ObjPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - 's3:GetObject'
+                  - 's3:PutObject'
+                Resource: [
+                  !Join
+                    - ''
+                    - - !GetAtt S3StaticWebBucket.Arn
+                      - "/*"
+                  ,                  
+                  !Join
+                    - ''
+                    - - 'arn:aws:s3:::'
+                      - !Ref QSS3BucketName
+                      - !Ref QSS3KeyPrefix
+                      - 'templates/web/public_html'
+                      - "/*"
+                ]       
+      Path: '/'
+
+  DeployWebLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |          
+          import os
+          import boto3
+
+          def handler(event, context):
+              regionName = str(os.environ.get("CUSTOM_REGION_NAME")) if 'CUSTOM_REGION_NAME' in os.environ else None
+              s3Bucket = str(os.environ.get("CUSTOM_S3_BUCKET")) if 'CUSTOM_S3_BUCKET' in os.environ else None
+              s3ObjectList = str(os.environ.get("CUSTOM_S3_OBJECT_LIST")) if 'CUSTOM_S3_OBJECT_LIST' in os.environ else None
+              apiGatewayInvokeUrl = str(os.environ.get("CUSTOM_INVOKE_URL")) if 'CUSTOM_INVOKE_URL' in os.environ else None
+
+              if s3ObjectList[-1] == ",":
+                  s3ObjectList = s3ObjectList[:-1].replace(" ", "").split(",")
+              else:
+                  s3ObjectList = s3ObjectList.replace(" ", "").split(",")
+
+              if regionName and s3Bucket and s3ObjectList and apiGatewayInvokeUrl:
+
+                  envDict = {}
+                  for key in os.environ.items():            
+                      if "CUSTOM_" in key[0]:
+                          envDict.update({key[0]: key[1]})
+
+                  s3ResourceClient = boto3.resource('s3', region_name=regionName)
+
+                  for s3ObjKey in s3ObjectList:
+                      s3Object = s3ResourceClient.Object(s3Bucket, s3ObjKey)
+
+                      fileContents = s3Object.get()['Body'].read().decode('utf-8')
+
+                      for env in envDict:                
+                          if env in fileContents:
+                              fileContents = fileContents.replace(env, envDict[env])            
+
+                      s3Object.put(
+                          Body=fileContents,
+                          ACL='public-read',
+                          ContentType='text/html'
+                      )  
+      Description: AWS Lambda function to trigger the AWS State Machine workflow - C1SDStateMachine
+      FunctionName: TriggerLambdaFunction-C1SDStateMachine
+      Handler: index.handler
+      MemorySize: 128
+      Runtime: python3.8
+      Environment:
+        Variables:          
+          CUSTOM_REGION_NAME: !Ref "AWS::Region"
+          CUSTOM_S3_BUCKET: !Ref S3StaticWebBucket
+          CUSTOM_S3_OBJECT_LIST: 'index.html,error.html'
+          CUSTOM_INVOKE_URL: !Ref APIGatewayInvokeURL
+      Role: !GetAtt C1SDLambdaDeployS3WebPolicy.Arn      
+      Timeout: 180
+
+  C1SDLambdaDeployS3WebPolicy:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service:
+                - 'lambda.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: C1SDLambdaDeployS3WebPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - 's3:GetObject'
+                  - 's3:PutObject'
+                Resource: !Join
+                  - ''
+                  - - !GetAtt S3StaticWebBucket.Arn
+                    - "/*"        
+      Path: '/'
+
+  # Triggers an AWS Lambda function to copy web files and deploy to the Static S3 bucket.
+  CopyFilesCustomResource:
+    Type: 'Custom::C1SDCopyFilesCustomResource'
+    Properties:
+      ServiceToken: !GetAtt CopyFilesLambdaFunction.Arn
+
+  # Triggers an AWS Lambda function to modify web files on the Static S3 bucket.
+  DeployWebCustomResource:
+    Type: 'Custom::C1SDDeployWebCustomResource'
+    Properties:
+      ServiceToken: !GetAtt DeployWebLambdaFunction.Arn
+
+# Outputs
+Outputs:
+  StaticWebsiteUrl:
+    Description: 'S3 Static Website Bucket Url'
+    Value: !GetAtt 'S3StaticWebBucket.WebsiteURL'

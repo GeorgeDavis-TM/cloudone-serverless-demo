@@ -1,29 +1,54 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: API Gateway for Cloud One Serverless Demo.
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "Cloud One Serverless Deployment Configuration"
+        Parameters:
+          - QSS3BucketName
+          - QSS3KeyPrefix
+          - C1SDStateMachineArn
+      -
+        Label:
+          default: "DO NOT MODIFY. Backend Configuration"
+        Parameters:
+          - DefaultAPIGatewayStage
+          - TriggerStateMachineLambdaFunctionName
+    ParameterLabels:
+      QSS3BucketName:
+        default: "S3 Bucket Name that contains the Deployment resources"
+      QSS3KeyPrefix:
+        default: "S3 Key Prefix for the Deployment resources"
+      C1SDStateMachineArn:
+        default: "ARN of the C1SD State Machine"
+      # FSSIngestBucket:
+      #   default: "FSS S3 Ingest Bucket"
+
 Parameters:
-  # S3 Bucket Path  
   QSS3BucketName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
-    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
-      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
-      (-).
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).
     Default: cloudonedemo
-    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name
-      can include numbers, lowercase letters, uppercase letters, and hyphens (-).
-      It cannot start or end with a hyphen (-).
+    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).
     Type: String
   QSS3KeyPrefix:
     AllowedPattern: ^[0-9a-zA-Z-/.]*$
-    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
-      uppercase letters, hyphens (-), dots(.) and forward slash (/).
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and forward slash (/).
     Default: "cloudone-serverless-demo/"
-    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
-      can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and
-      forward slash (/).
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and forward slash (/).
     Type: String
   C1SDStateMachineArn:
     ConstraintDescription: must be a valid AWS ARN
     Description: ARN of the State Machine that runs the Cloud One Serverless Demo workflow.
+    Type: String
+  DefaultAPIGatewayStage:
+    Default: prod
+    Description: Environment name for the API Gateway
+    Type: String
+  TriggerStateMachineLambdaFunctionName:
+    Default: TriggerStateMachineLambdaFunction-C1SD
     Type: String
 
 Resources:
@@ -35,7 +60,11 @@ Resources:
       EndpointConfiguration:
           Types: 
             - REGIONAL
+      BinaryMediaTypes:
+        - 'multipart/form-data'
       ApiKeySourceType: HEADER
+      DisableExecuteApiEndpoint: false
+      FailOnWarnings: true
       Tags:
         - Key: Owner
           Value: TrendMicro
@@ -44,7 +73,7 @@ Resources:
         - Key: Name
           Value: cloudone-serverless-demo
 
-  APIGatewayMethod:
+  APIGatewayGetMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       ApiKeyRequired: false
@@ -61,6 +90,82 @@ Resources:
       ResourceId: !GetAtt APIGatewayRestApi.RootResourceId
       RestApiId: !Ref APIGatewayRestApi
 
+  APIGatewayPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: POST
+      Integration:
+        ConnectionType: INTERNET
+        Credentials: !GetAtt APIGatewayIAMRole.Arn
+        IntegrationHttpMethod: POST
+        PassthroughBehavior: WHEN_NO_MATCH
+        TimeoutInMillis: 29000
+        Type: AWS_PROXY
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TriggerLambdaFunction.Arn}/invocations'
+      ResourceId: !GetAtt APIGatewayRestApi.RootResourceId
+      RestApiId: !Ref APIGatewayRestApi
+
+  APIGatewayStage:
+    Type: AWS::ApiGateway::Stage
+    Properties: 
+      AccessLogSetting: 
+        DestinationArn: !GetAtt APIGatewayCloudWatchLogGroup.Arn
+        Format: >-
+          { "requestId":"$context.requestId", "ip": "$context.identity.sourceIp", "requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod","routeKey":"$context.routeKey", "status":"$context.status","protocol":"$context.protocol", "responseLength":"$context.responseLength" }
+      DeploymentId: !Ref APIGatewayDeployment
+      Description: !Join
+        - ''
+        - - 'Stage for the Cloud One Serverless Demo API - '
+          - !Ref DefaultAPIGatewayStage
+          - '.'
+      MethodSettings: 
+        - ResourcePath: /
+          HttpMethod: GET
+          LoggingLevel: INFO
+          MetricsEnabled: true
+          DataTraceEnabled: false
+          ThrottlingBurstLimit: 50
+          ThrottlingRateLimit: 100
+        - ResourcePath: /
+          HttpMethod: POST
+          LoggingLevel: INFO
+          MetricsEnabled: true
+          DataTraceEnabled: false
+          ThrottlingBurstLimit: 50
+          ThrottlingRateLimit: 100
+      RestApiId: !Ref APIGatewayRestApi
+      StageName: !Ref DefaultAPIGatewayStage
+      Tags:
+        - Key: Owner
+          Value: TrendMicro
+        - Key: Product
+          Value: cloudone-serverless-demo
+        - Key: Name
+          Value: cloudone-serverless-demo
+
+  APIGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment    
+    Properties:
+      RestApiId: !Ref APIGatewayRestApi
+    DependsOn:
+      - APIGatewayGetMethod
+      - APIGatewayPostMethod
+
+  APIGatewayCloudWatchLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: C1SDAPIGatewayCloudWatchLogGroup
+      RetentionInDays: 14
+      Tags:
+        - Key: Owner
+          Value: TrendMicro
+        - Key: Product
+          Value: cloudone-serverless-demo
+        - Key: Name
+          Value: cloudone-serverless-demo
+
   APIGatewayIAMRole:
     Type: AWS::IAM::Role
     Properties:
@@ -76,15 +181,34 @@ Resources:
               - 'sts:AssumeRole'
       Path: '/'
       Policies:
-        - PolicyName: LambdaAccess
+        - PolicyName: C1SDLambdaAccess
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: 'Allow'
-                Action: 'lambda:*'
+                Action: 'lambda:InvokeFunction'
                 Resource: !GetAtt TriggerLambdaFunction.Arn
+              - Effect: 'Allow'
+                Action:                  
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: !GetAtt APIGatewayCloudWatchLogGroup.Arn
 
-  TriggerLambdaFunction:
+  TriggerStateMachineLambdaFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${TriggerLambdaFunctionName}
+      RetentionInDays: 14
+      Tags:
+        - Key: Owner
+          Value: TrendMicro
+        - Key: Product
+          Value: cloudone-serverless-demo
+        - Key: Name
+          Value: cloudone-serverless-demo
+
+  TriggerStateMachineLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
       Code:
@@ -108,8 +232,8 @@ Resources:
                 'body': str(stateMachineStartExecutionResponse)
               }
               return response        
-      Description: AWS Lambda function to trigger the AWS State Machine workflow - C1SDStateMachine
-      FunctionName: TriggerLambdaFunction-C1SDStateMachine
+      Description: AWS Lambda function to trigger the AWS State Machine workflow - C1SD
+      FunctionName: !Ref TriggerStateMachineLambdaFunctionName
       Handler: index.handler
       MemorySize: 128
       Runtime: python3.8
@@ -117,10 +241,10 @@ Resources:
         Variables:
           REGION_NAME: !Ref "AWS::Region"
           STATE_MACHINE_ARN: !Ref C1SDStateMachineArn
-      Role: !GetAtt TriggerLambdaIAMRole.Arn      
+      Role: !GetAtt TriggerStateMachineLambdaIAMRole.Arn
       Timeout: 180
 
-  TriggerLambdaIAMRole:
+  TriggerStateMachineLambdaIAMRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -140,7 +264,14 @@ Resources:
               - Effect: "Allow"
                 Action:
                   - 'states:*'
-                Resource: "*"          
+                Resource: "*"
+              - Effect: 'Allow'
+                Action:                  
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${TriggerLambdaFunctionName}:*
       Path: '/'
 
 # Outputs
@@ -150,5 +281,5 @@ Outputs:
     Description: "ARN of the API Gateway created for the CloudOneServerlessDemo API"
 
   APIGatewayInvokeURL:
-    Value: !Sub https://${APIGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/    
+    Value: !Sub https://${APIGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/
     Description: "REST API Endpoint of the API Gateway that can be used to trigger the SSM Run Command Invocation"

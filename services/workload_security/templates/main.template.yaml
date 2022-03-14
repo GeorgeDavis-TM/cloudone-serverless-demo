@@ -26,11 +26,6 @@ Parameters:
     Description: Policy ID of the security policy to be deployed on the EC2 Instance
     ConstraintDescription: must be valid Policy Id from Workload Security.
     Default: 34
-  WSToken:
-    Type: String
-    Description: Token from Workload Security Console
-    ConstraintDescription: must be valid token from Workload Security.
-    Default: 850DB008-56EE-272F-43F7-58B828ECA236
   WSApiKey:
     Type: String
     Description: API Key from Workload Security Console
@@ -291,12 +286,6 @@ Resources:
       Name: WSApiKey
       Type: String
       Value: !Ref WSApiKey
-  SSMWSToken:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: WSToken
-      Type: String
-      Value: !Ref WSToken
   InstallTools:
     Type: 'AWS::SSM::Document'
     Properties:
@@ -308,10 +297,6 @@ Resources:
             description: (Required) Specify your Cloud One Workload Security API Key.
             type: String
             default: "{{ssm:WSApiKey}}"
-          ssmWsToken:
-            description: (Required) Specify your Cloud One Workload Security Token.
-            type: String
-            default: "{{ssm:WSToken}}"
         mainSteps:
           - action: 'aws:downloadContent'
             name: downloadGitHubContent
@@ -330,7 +315,7 @@ Resources:
             name: runShellScript
             inputs:              
               runCommand:          
-                - ./install-dsa.sh {{ssmWsApiKey}} {{ssmWsToken}}
+                - ./install-dsa.sh {{ssmWsApiKey}}
               workingDirectory: '/home/ec2-user/'
               timeoutSeconds: '600'
       DocumentFormat: JSON
@@ -345,8 +330,7 @@ Resources:
           Value: cloudone-serverless-demo
       TargetType: '/AWS::EC2::Instance'
     DependsOn:
-    - SSMWSApiKey
-    - SSMWSToken
+    - SSMWSApiKey    
   InstallNodejs:
     Type: 'AWS::SSM::Document'
     Properties:

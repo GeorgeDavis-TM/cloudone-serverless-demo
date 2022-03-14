@@ -37,6 +37,7 @@ Resources:
             Principal:
               Service:
                 - lambda.amazonaws.com
+                - states.amazonaws.com
             Action:
               - 'sts:AssumeRole'
       Description: cloudone-serverless-demo-statemachine-IAM-Role

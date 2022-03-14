@@ -86,7 +86,7 @@ Resources:
         PassthroughBehavior: WHEN_NO_MATCH
         TimeoutInMillis: 29000
         Type: AWS_PROXY
-        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TriggerLambdaFunction.Arn}/invocations'
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TriggerStateMachineLambdaFunction.Arn}/invocations'
       ResourceId: !GetAtt APIGatewayRestApi.RootResourceId
       RestApiId: !Ref APIGatewayRestApi
 
@@ -103,7 +103,7 @@ Resources:
         PassthroughBehavior: WHEN_NO_MATCH
         TimeoutInMillis: 29000
         Type: AWS_PROXY
-        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TriggerLambdaFunction.Arn}/invocations'
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TriggerStateMachineLambdaFunction.Arn}/invocations'
       ResourceId: !GetAtt APIGatewayRestApi.RootResourceId
       RestApiId: !Ref APIGatewayRestApi
 
@@ -187,7 +187,7 @@ Resources:
             Statement:
               - Effect: 'Allow'
                 Action: 'lambda:InvokeFunction'
-                Resource: !GetAtt TriggerLambdaFunction.Arn
+                Resource: !GetAtt TriggerStateMachineLambdaFunction.Arn
               - Effect: 'Allow'
                 Action:                  
                   - 'logs:CreateLogGroup'
@@ -198,7 +198,7 @@ Resources:
   TriggerStateMachineLambdaFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub /aws/lambda/${TriggerLambdaFunctionName}
+      LogGroupName: !Sub /aws/lambda/${TriggerStateMachineLambdaFunctionName}
       RetentionInDays: 14
       Tags:
         - Key: Owner
@@ -271,7 +271,7 @@ Resources:
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
                 Resource:
-                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${TriggerLambdaFunctionName}:*
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${TriggerStateMachineLambdaFunctionName}:*
       Path: '/'
 
 # Outputs
@@ -283,3 +283,7 @@ Outputs:
   APIGatewayInvokeURL:
     Value: !Sub https://${APIGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/
     Description: "REST API Endpoint of the API Gateway that can be used to trigger the SSM Run Command Invocation"
+
+  APIGatewayStageName:
+    Value: !Ref DefaultAPIGatewayStage
+    Description: "Environment name for the API Gateway"

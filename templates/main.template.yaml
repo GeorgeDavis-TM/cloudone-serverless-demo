@@ -209,6 +209,8 @@ Resources:
         QSS3BucketName: !Sub '${QSS3BucketName}'
         QSS3KeyPrefix: !Sub '${QSS3KeyPrefix}'
         APIGatewayInvokeURL: !Sub '${APIGatewayStack.Outputs.APIGatewayInvokeURL}'
+        APIGatewayRestApi: !Sub '${APIGatewayStack.Outputs.APIGatewayArn}'
+        APIGatewayStageName: !Sub '${APIGatewayStack.Outputs.APIGatewayStageName}'
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/web/templates/main.template.yaml'
 
 Outputs:
@@ -295,3 +297,6 @@ Outputs:
 
   RESTAPIEndpointUrl:
     Value: !GetAtt APIGatewayStack.Outputs.APIGatewayInvokeURL
+
+  S3StaticBucketWebsiteUrl:
+    Value: !GetAtt WebStack.Outputs.StaticWebsiteUrl

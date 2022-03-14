@@ -1,7 +1,30 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: API Gateway for Cloud One Serverless Demo.
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "Cloud One Serverless Deployment Configuration"
+        Parameters:
+          - QSS3BucketName
+          - QSS3KeyPrefix
+          - APIGatewayInvokeURL
+      -
+        Label:
+          default: "DO NOT MODIFY. Backend Configuration"
+        Parameters:
+          - CopyFilesLambdaFunctionName
+          - DeployWebLambdaFunctionName
+    ParameterLabels:
+      QSS3BucketName:
+        default: "S3 Bucket Name that contains the Deployment resources"
+      QSS3KeyPrefix:
+        default: "S3 Key Prefix for the Deployment resources"
+      APIGatewayInvokeURL:
+        default: "CloudOneServerlessDemoAPI API Gateway Invoke URL"
+
 Parameters:
-  # S3 Bucket Path  
   QSS3BucketName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
     ConstraintDescription: Quick Start bucket name can include numbers, lowercase
@@ -24,6 +47,12 @@ Parameters:
   APIGatewayInvokeURL:
     ConstraintDescription: must be a valid HTTP URL
     Description: Invoke URL of the Cloud One Serverless Demo API Gateway instance.
+    Type: String
+  CopyFilesLambdaFunctionName:
+    Default: CopyFilesLambdaFunction-C1SDWeb
+    Type: String
+  DeployWebLambdaFunctionName:
+    Default: DeployWebLambdaFunction-C1SDWeb
     Type: String
 
 Resources:
@@ -59,49 +88,61 @@ Resources:
           import os
           import boto3
           import cfnresponse
+          import logging
+
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
 
           def handler(event, context):
-            regionName = str(os.environ.get("CUSTOM_REGION_NAME")) if 'CUSTOM_REGION_NAME' in os.environ else None
-            srcS3Bucket = str(os.environ.get("CUSTOM_S3_SRC_BUCKET")) if 'CUSTOM_S3_SRC_BUCKET' in os.environ else None
-            srcS3KeyPrefix = str(os.environ.get("CUSTOM_S3_KEY_PREFIX")) if 'CUSTOM_S3_KEY_PREFIX' in os.environ else None
-            destS3Bucket = str(os.environ.get("CUSTOM_S3_DEST_BUCKET")) if 'CUSTOM_S3_DEST_BUCKET' in os.environ else None
-            s3ObjectList = str(os.environ.get("CUSTOM_S3_OBJECT_LIST")) if 'CUSTOM_S3_OBJECT_LIST' in os.environ else None
 
-            if s3ObjectList[-1] == ",":
-              s3ObjectList = s3ObjectList[:-1].replace(" ", "").split(",")
-            else:
-              s3ObjectList = s3ObjectList.replace(" ", "").split(",")
+            # Setup
+            logger.info("event: {}".format(event))
+            status = cfnresponse.SUCCESS
+            responseData = {}
+            responseData['Data'] = {}
 
-            if regionName and srcS3Bucket and destS3Bucket and s3ObjectList:
+            try:
 
-              s3Client = boto3.client('s3', region_name=regionName)
+              if event['RequestType'] == 'Create':
+                regionName = str(os.environ.get("CUSTOM_REGION_NAME")) if 'CUSTOM_REGION_NAME' in os.environ else None
+                srcS3Bucket = str(os.environ.get("CUSTOM_S3_SRC_BUCKET")) if 'CUSTOM_S3_SRC_BUCKET' in os.environ else None
+                srcS3KeyPrefix = str(os.environ.get("CUSTOM_S3_KEY_PREFIX")) if 'CUSTOM_S3_KEY_PREFIX' in os.environ else None
+                destS3Bucket = str(os.environ.get("CUSTOM_S3_DEST_BUCKET")) if 'CUSTOM_S3_DEST_BUCKET' in os.environ else None
+                s3ObjectList = str(os.environ.get("CUSTOM_S3_OBJECT_LIST")) if 'CUSTOM_S3_OBJECT_LIST' in os.environ else None
 
-              for s3ObjKey in s3ObjectList:
-
-                srcS3ObjKey = None
-                if srcS3KeyPrefix:
-                  srcS3ObjKey = srcS3KeyPrefix + s3ObjKey
+                if s3ObjectList[-1] == ",":
+                  s3ObjectList = s3ObjectList[:-1].replace(" ", "").split(",")
                 else:
-                  srcS3ObjKey = s3ObjKey
+                  s3ObjectList = s3ObjectList.replace(" ", "").split(",")
 
-                s3CopyObjectResponse = s3Client.copy_object(
-                  ACL='public-read',
-                  Bucket=destS3Bucket,
-                  ContentType='text/html',
-                  CopySource={
-                    'Bucket': srcS3Bucket,
-                    'Key': srcS3ObjKey
-                  },
-                  Key=s3ObjKey
-                )
+                if regionName and srcS3Bucket and destS3Bucket and s3ObjectList:
 
-                print(str(s3CopyObjectResponse))
-                cfnresponse.send(event, context, cfnresponse.SUCCESS, s3CopyObjectResponse)
+                  s3Client = boto3.client('s3', region_name=regionName)
 
-            else:
-              cfnresponse.send(event, context, cfnresponse.FAILED, {})
+                  for s3ObjKey in s3ObjectList:
+
+                    srcS3ObjKey = None
+                    if srcS3KeyPrefix:
+                      srcS3ObjKey = "/" + srcS3KeyPrefix + "templates/web/public_html/" + s3ObjKey
+                    else:
+                      srcS3ObjKey = "/" + s3ObjKey
+
+                    s3CopyObjectResponse = s3Client.copy_object(
+                      ACL='public-read',
+                      Bucket=destS3Bucket,
+                      ContentType='text/html',
+                      CopySource=srcS3Bucket + srcS3ObjKey,
+                      Key=s3ObjKey
+                    )
+
+                    print(str(s3CopyObjectResponse))
+            except Exception as e:
+              logger.info("Exception: {}".format(e))
+              status = cfnresponse.FAILED
+              
+            cfnresponse.send(event, context, status, responseData, None)
       Description: AWS Lambda function to trigger the AWS State Machine workflow - C1SDStateMachine
-      FunctionName: CopyFilesLambdaFunction-C1SDStateMachine
+      FunctionName: !Ref CopyFilesLambdaFunctionName
       Handler: index.handler
       MemorySize: 128
       Runtime: python3.8
@@ -111,10 +152,9 @@ Resources:
           CUSTOM_S3_SRC_BUCKET: !Ref QSS3BucketName
           CUSTOM_S3_KEY_PREFIX: !Ref QSS3KeyPrefix
           CUSTOM_S3_DEST_BUCKET: !Ref S3StaticWebBucket
-          CUSTOM_S3_OBJECT_LIST: 'index.html,error.html'
+          CUSTOM_S3_OBJECT_LIST: 'index.html,error.html,bootstrap-filestyle.min.js'
       Role: !GetAtt C1SDLambdaCopyS3ObjPolicy.Arn      
       Timeout: 180
-      DeletionPolicy: Retain
 
   C1SDLambdaCopyS3ObjPolicy:
     Type: AWS::IAM::Role
@@ -135,9 +175,12 @@ Resources:
             Statement:
               - Effect: "Allow"
                 Action:
+                  - 's3:ListBucket'
                   - 's3:GetObject'
                   - 's3:PutObject'
+                  - 's3:PutObjectAcl'                
                 Resource:
+                  - !GetAtt S3StaticWebBucket.Arn
                   - !Join
                     - ''
                     - - !GetAtt S3StaticWebBucket.Arn
@@ -146,9 +189,21 @@ Resources:
                     - ''
                     - - 'arn:aws:s3:::'
                       - !Ref QSS3BucketName
+                      - '/'
                       - !Ref QSS3KeyPrefix
                       - 'templates/web/public_html'
                       - "/*"  
+        - PolicyName: C1SDLambdaCopyS3ObjLogsPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${CopyFilesLambdaFunctionName}:*
       Path: '/'
 
   DeployWebLambdaFunction:
@@ -158,47 +213,64 @@ Resources:
         ZipFile: |          
           import os
           import boto3
+          import cfnresponse
+          import logging
+
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
 
           def handler(event, context):
-            regionName = str(os.environ.get("CUSTOM_REGION_NAME")) if 'CUSTOM_REGION_NAME' in os.environ else None
-            s3Bucket = str(os.environ.get("CUSTOM_S3_BUCKET")) if 'CUSTOM_S3_BUCKET' in os.environ else None
-            s3ObjectList = str(os.environ.get("CUSTOM_S3_OBJECT_LIST")) if 'CUSTOM_S3_OBJECT_LIST' in os.environ else None
-            apiGatewayInvokeUrl = str(os.environ.get("CUSTOM_INVOKE_URL")) if 'CUSTOM_INVOKE_URL' in os.environ else None
 
-            if s3ObjectList[-1] == ",":
-              s3ObjectList = s3ObjectList[:-1].replace(" ", "").split(",")
-            else:
-              s3ObjectList = s3ObjectList.replace(" ", "").split(",")
+            # Setup
+            logger.info("event: {}".format(event))
+            status = cfnresponse.SUCCESS
+            responseData = {}
+            responseData['Data'] = {}
 
-            if regionName and s3Bucket and s3ObjectList and apiGatewayInvokeUrl:
+            try:
 
-              envDict = {}
-              for key in os.environ.items():            
-                if "CUSTOM_" in key[0]:
-                  envDict.update({key[0]: key[1]})
+              if event['RequestType'] == 'Create':
+                regionName = str(os.environ.get("CUSTOM_REGION_NAME")) if 'CUSTOM_REGION_NAME' in os.environ else None
+                s3Bucket = str(os.environ.get("CUSTOM_S3_BUCKET")) if 'CUSTOM_S3_BUCKET' in os.environ else None
+                s3ObjectList = str(os.environ.get("CUSTOM_S3_OBJECT_LIST")) if 'CUSTOM_S3_OBJECT_LIST' in os.environ else None
+                apiGatewayInvokeUrl = str(os.environ.get("CUSTOM_INVOKE_URL")) if 'CUSTOM_INVOKE_URL' in os.environ else None
 
-              s3ResourceClient = boto3.resource('s3', region_name=regionName)
+                if s3ObjectList[-1] == ",":
+                  s3ObjectList = s3ObjectList[:-1].replace(" ", "").split(",")
+                else:
+                  s3ObjectList = s3ObjectList.replace(" ", "").split(",")
 
-              for s3ObjKey in s3ObjectList:
-                s3Object = s3ResourceClient.Object(s3Bucket, s3ObjKey)
+                if regionName and s3Bucket and s3ObjectList and apiGatewayInvokeUrl:
 
-                fileContents = s3Object.get()['Body'].read().decode('utf-8')
+                  envDict = {}
+                  for key in os.environ.items():            
+                    if "CUSTOM_" in key[0]:
+                      envDict.update({key[0]: key[1]})
 
-                for env in envDict:                
-                  if env in fileContents:
-                    fileContents = fileContents.replace(env, envDict[env])            
+                  s3ResourceClient = boto3.resource('s3', region_name=regionName)
 
-                s3Object.put(
-                  Body=fileContents,
-                  ACL='public-read',
-                  ContentType='text/html'
-                )
-              cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+                  for s3ObjKey in s3ObjectList:
+                    s3Object = s3ResourceClient.Object(s3Bucket, s3ObjKey)
 
-            else:
-              cfnresponse.send(event, context, cfnresponse.FAILED, {})
+                    fileContents = s3Object.get()['Body'].read().decode('utf-8')
+
+                    for env in envDict:                
+                      if env in fileContents:
+                        fileContents = fileContents.replace(env, envDict[env])            
+
+                    s3Object.put(
+                      Body=fileContents,
+                      ACL='public-read',
+                      ContentType='text/html'
+                    )
+
+            except Exception as e:
+              logger.info("Exception: {}".format(e))
+              status = cfnresponse.FAILED
+              
+            cfnresponse.send(event, context, status, responseData, None)
       Description: AWS Lambda function to trigger the AWS State Machine workflow - C1SDStateMachine
-      FunctionName: DeployWebLambdaFunction-C1SDStateMachine
+      FunctionName: !Ref DeployWebLambdaFunctionName          
       Handler: index.handler
       MemorySize: 128
       Runtime: python3.8
@@ -207,10 +279,9 @@ Resources:
           CUSTOM_REGION_NAME: !Ref "AWS::Region"
           CUSTOM_S3_BUCKET: !Ref S3StaticWebBucket
           CUSTOM_S3_OBJECT_LIST: 'index.html,error.html'
-          CUSTOM_INVOKE_URL: !Ref APIGatewayInvokeURL
+          CUSTOM_INVOKE_URL: !Sub https://${APIGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${DefaultAPIGatewayStage}
       Role: !GetAtt C1SDLambdaDeployS3WebPolicy.Arn      
       Timeout: 180
-      DeletionPolicy: Retain
 
   C1SDLambdaDeployS3WebPolicy:
     Type: AWS::IAM::Role
@@ -231,12 +302,25 @@ Resources:
             Statement:
               - Effect: "Allow"
                 Action:
+                  - 's3:ListBucket'
                   - 's3:GetObject'
                   - 's3:PutObject'
+                  - 's3:PutObjectAcl'
                 Resource: !Join
                   - ''
                   - - !GetAtt S3StaticWebBucket.Arn
-                    - "/*"        
+                    - "/*"
+        - PolicyName: C1SDLambdaDeployS3WebLogsPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: 
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${DeployWebLambdaFunctionName}:*
       Path: '/'
 
   # Triggers an AWS Lambda function to copy web files and deploy to the Static S3 bucket.

@@ -296,7 +296,10 @@ Outputs:
 #     Value: !GetAtt WorkloadSecurityStack.Outputs.TopicARNforC1WS
 
   RESTAPIEndpointUrl:
-    Value: !GetAtt APIGatewayStack.Outputs.APIGatewayInvokeURL
+    Value: !Join
+    - ''
+    - - !GetAtt APIGatewayStack.Outputs.APIGatewayInvokeURL
+      - !Ref APIGatewayStack.Outputs.APIGatewayStageName
 
   S3StaticBucketWebsiteUrl:
     Value: !GetAtt WebStack.Outputs.StaticWebsiteUrl

@@ -53,6 +53,19 @@ Resources:
         - Key: Name
           Value: cloudone-serverless-demo
 
+  C1SDStateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: C1SDStateMachineLogGroup
+      RetentionInDays: 14
+      Tags:
+        - Key: Owner
+          Value: TrendMicro
+        - Key: Product
+          Value: cloudone-serverless-demo
+        - Key: Name
+          Value: cloudone-serverless-demo
+
   C1SDStateMachine:
     Type: AWS::StepFunctions::StateMachine
     Properties:
@@ -62,6 +75,7 @@ Resources:
         Key: !Sub '${QSS3KeyPrefix}templates/step_functions/statemachine.json'           
       DefinitionSubstitutions:
         SSMGetResponseLambdaFunction: !Ref SSMGetResponseLambdaFunctionArn
+        C1SDStateMachineLogGroup: !Ref C1SDStateMachineLogGroup
       RoleArn: !GetAtt C1SDIAMRole.Arn
 
 # Outputs

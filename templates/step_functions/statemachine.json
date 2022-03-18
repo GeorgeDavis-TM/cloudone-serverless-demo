@@ -26,7 +26,11 @@
                             "cloudone-serverless-demo"
                         ]
                     }
-                ]
+                ],
+                "CloudWatchOutputConfig": {
+                    "CloudWatchLogGroupName": "${C1SDStateMachineLogGroup}",
+                    "CloudWatchOutputEnabled": true
+                }
             },
             "Resource": "arn:aws:states:::aws-sdk:ssm:sendCommand"
         },
@@ -76,7 +80,11 @@
                             "cloudone-serverless-demo"
                         ]
                     }
-                ]
+                ],
+                "CloudWatchOutputConfig": {
+                    "CloudWatchLogGroupName": "${C1SDStateMachineLogGroup}",
+                    "CloudWatchOutputEnabled": true
+                }
             },
             "Resource": "arn:aws:states:::aws-sdk:ssm:sendCommand"
         },
@@ -126,7 +134,11 @@
                             "cloudone-serverless-demo"
                         ]
                     }
-                ]
+                ],
+                "CloudWatchOutputConfig": {
+                    "CloudWatchLogGroupName": "${C1SDStateMachineLogGroup}",
+                    "CloudWatchOutputEnabled": true
+                }
             },
             "Resource": "arn:aws:states:::aws-sdk:ssm:sendCommand"
         },
@@ -176,7 +188,11 @@
                             "cloudone-serverless-demo"
                         ]
                     }
-                ]
+                ],
+                "CloudWatchOutputConfig": {
+                    "CloudWatchLogGroupName": "${C1SDStateMachineLogGroup}",
+                    "CloudWatchOutputEnabled": true
+                }
             },
             "Resource": "arn:aws:states:::aws-sdk:ssm:sendCommand"
         },
@@ -231,7 +247,11 @@
                                             "cloudone-serverless-demo"
                                         ]
                                     }
-                                ]
+                                ],
+                                "CloudWatchOutputConfig": {
+                                    "CloudWatchLogGroupName": "${C1SDStateMachineLogGroup}",
+                                    "CloudWatchOutputEnabled": true
+                                }
                             },
                             "Resource": "arn:aws:states:::aws-sdk:ssm:sendCommand",
                             "Next": "WaitForSSM-DeployWS"
@@ -286,7 +306,11 @@
                                             "cloudone-serverless-demo"
                                         ]
                                     }
-                                ]
+                                ],
+                                "CloudWatchOutputConfig": {
+                                    "CloudWatchLogGroupName": "${C1SDStateMachineLogGroup}",
+                                    "CloudWatchOutputEnabled": true
+                                }
                             },
                             "Resource": "arn:aws:states:::aws-sdk:ssm:sendCommand",
                             "Next": "WaitForSSM-DeployFSS"

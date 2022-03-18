@@ -6,8 +6,9 @@ import logging
 
 def lambda_handler(event, context):
 
-    logger = logging.getLogger('boto3').setLevel(logging.DEBUG)
-    logging.getLogger('botocore').setLevel(logging.DEBUG)
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    # logging.getLogger('botocore').setLevel(logging.DEBUG)
 
     logger.info("event: {}".format(event))
     
@@ -24,6 +25,8 @@ def lambda_handler(event, context):
             filterTags = []
             for tagItem in targetTags:
                 filterTags.append({"Name": tagItem["Key"], "Values": tagItem["Values"]})
+
+            filterTags.append({"Name": "instance-state-name", "Values": "running"})
             
             ec2Client = boto3.client('ec2', region_name=regionName)
             
@@ -49,7 +52,7 @@ def lambda_handler(event, context):
             
             waiter = ssmClient.get_waiter('command_executed')
             
-            # print(str(commandId), str(instanceId))
+            print(str(commandId), str(instanceId))
 
             waiter.wait(
                 CommandId=commandId,

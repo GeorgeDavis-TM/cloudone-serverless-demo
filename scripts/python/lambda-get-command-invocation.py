@@ -26,7 +26,7 @@ def lambda_handler(event, context):
             for tagItem in targetTags:
                 filterTags.append({"Name": tagItem["Key"], "Values": tagItem["Values"]})
 
-            filterTags.append({"Name": "instance-state-name", "Values": "running"})
+            filterTags.append({"Name": "instance-state-name", "Values": ["running"]})
             
             ec2Client = boto3.client('ec2', region_name=regionName)
             
@@ -69,7 +69,7 @@ def lambda_handler(event, context):
                 PluginName=pluginName
             )
             
-            print(str(getCommandInvocationResponse))
+            print("GetCommandInvocationResponse - ", str(getCommandInvocationResponse))
 
             if getCommandInvocationResponse["Status"] == "Success":
                 print("Success: " + getCommandInvocationResponse["StandardOutputContent"] + " - " + getCommandInvocationResponse["StandardOutputUrl"])
@@ -79,8 +79,12 @@ def lambda_handler(event, context):
                 return False
 
         except botocore.exceptions.WaiterError as error:
-            print("Error: An unknown exception occurred.", error)            
+            print("WaiterError: Waiter was unsuccessful.", error)            
             raise error
             
-        except:
-            print("Error: An unknown exception occurred.")
+        except Exception as error:
+            print("UnknownError: An unknown exception occurred.", error)
+            raise error
+            
+        else:
+            print("Wait Successful. Moving on...")

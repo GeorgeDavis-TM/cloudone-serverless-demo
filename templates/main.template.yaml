@@ -208,9 +208,7 @@ Resources:
       Parameters:
         QSS3BucketName: !Sub '${QSS3BucketName}'
         QSS3KeyPrefix: !Sub '${QSS3KeyPrefix}'
-        APIGatewayInvokeURL: !Sub '${APIGatewayStack.Outputs.APIGatewayInvokeURL}'
-        APIGatewayRestApi: !Sub '${APIGatewayStack.Outputs.APIGatewayArn}'
-        APIGatewayStageName: !Sub '${APIGatewayStack.Outputs.APIGatewayStageName}'
+        APIGatewayInvokeURL: !Sub '${APIGatewayStack.Outputs.APIGatewayInvokeURL}${APIGatewayStack.Outputs.APIGatewayStageName}'
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/web/templates/main.template.yaml'
 
 Outputs:
@@ -296,10 +294,7 @@ Outputs:
 #     Value: !GetAtt WorkloadSecurityStack.Outputs.TopicARNforC1WS
 
   RESTAPIEndpointUrl:
-    Value: !Join
-    - ''
-    - - !GetAtt APIGatewayStack.Outputs.APIGatewayInvokeURL
-      - !Ref APIGatewayStack.Outputs.APIGatewayStageName
+    Value: !Sub ${APIGatewayStack.Outputs.APIGatewayInvokeURL}${APIGatewayStack.Outputs.APIGatewayStageName}
 
   S3StaticBucketWebsiteUrl:
     Value: !GetAtt WebStack.Outputs.StaticWebsiteUrl

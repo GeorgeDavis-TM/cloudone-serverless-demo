@@ -10,8 +10,6 @@ Metadata:
           - QSS3BucketName
           - QSS3KeyPrefix
           - APIGatewayInvokeURL
-          - APIGatewayRestApi
-          - APIGatewayStageName
       -
         Label:
           default: "DO NOT MODIFY. Backend Configuration"
@@ -25,11 +23,6 @@ Metadata:
         default: "S3 Key Prefix for the Deployment resources"
       APIGatewayInvokeURL:
         default: "CloudOneServerlessDemoAPI API Gateway Invoke URL"
-      APIGatewayRestApi:
-        default: "ARN of the API Gateway created for the CloudOneServerlessDemo API"
-      APIGatewayStageName:
-        default: "Environment name for the API Gateway"
-
 
 Parameters:
   QSS3BucketName:
@@ -54,13 +47,6 @@ Parameters:
   APIGatewayInvokeURL:
     ConstraintDescription: must be a valid HTTP URL
     Description: Invoke URL of the Cloud One Serverless Demo API Gateway instance.
-    Type: String
-  APIGatewayRestApi:
-    Description: ARN of the API Gateway created for the CloudOneServerlessDemo API
-    Type: String
-  APIGatewayStageName:
-    Default: prod
-    Description: Environment name for the API Gateway
     Type: String
   CopyFilesLambdaFunctionName:
     Default: CopyFilesLambdaFunction-C1SDWeb
@@ -284,7 +270,7 @@ Resources:
               
             cfnresponse.send(event, context, status, responseData, None)
       Description: AWS Lambda function to trigger the AWS State Machine workflow - C1SDStateMachine
-      FunctionName: !Ref DeployWebLambdaFunctionName          
+      FunctionName: !Ref DeployWebLambdaFunctionName
       Handler: index.handler
       MemorySize: 128
       Runtime: python3.8
@@ -293,7 +279,7 @@ Resources:
           CUSTOM_REGION_NAME: !Ref "AWS::Region"
           CUSTOM_S3_BUCKET: !Ref S3StaticWebBucket
           CUSTOM_S3_OBJECT_LIST: 'index.html,error.html'
-          CUSTOM_INVOKE_URL: !Sub https://${APIGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${APIGatewayStageName}
+          CUSTOM_INVOKE_URL: !Ref APIGatewayInvokeURL
       Role: !GetAtt C1SDLambdaDeployS3WebPolicy.Arn      
       Timeout: 180
 

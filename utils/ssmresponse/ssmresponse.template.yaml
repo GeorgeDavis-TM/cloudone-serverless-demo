@@ -59,7 +59,7 @@ Resources:
         Variables:
           PLUGIN_NAME: 'runShellScript'
           REGION_NAME: !Ref 'AWS::Region'
-          SLEEP_TIMER: 3
+          SLEEP_TIMER: 10
       Role: !GetAtt SSMGetResponseRole.Arn
       MemorySize: 128
       Timeout: 180

@@ -286,6 +286,12 @@ Resources:
       Name: WSApiKey
       Type: String
       Value: !Ref WSApiKey
+  SSMWSPolicyId:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: WSPolicyId
+      Type: String
+      Value: !Ref WSPolicyId
   InstallTools:
     Type: 'AWS::SSM::Document'
     Properties:
@@ -293,10 +299,14 @@ Resources:
         schemaVersion: '2.2'
         description: 0. Install Tools
         parameters:
-          ssmWsApiKey:
+          ssmWSApiKey:
             description: (Required) Specify your Cloud One Workload Security API Key.
             type: String
             default: "{{ssm:WSApiKey}}"
+          ssmWSPolicyId:
+            description: (Required) Specify your Cloud One Workload Security Policy ID.
+            type: String
+            default: "{{ssm:WSPolicyId}}"
         mainSteps:
           - action: 'aws:downloadContent'
             name: downloadGitHubContent
@@ -315,7 +325,7 @@ Resources:
             name: runShellScript
             inputs:              
               runCommand:          
-                - ./install-dsa.sh {{ssmWsApiKey}}
+                - ./install-dsa.sh {{ssmWSApiKey}} {{ssmWSPolicyId}}
               workingDirectory: '/home/ec2-user/'
               timeoutSeconds: '600'
       DocumentFormat: JSON

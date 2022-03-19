@@ -25,12 +25,12 @@ Parameters:
     Type: Number
     Description: Policy ID of the security policy to be deployed on the EC2 Instance
     ConstraintDescription: must be valid Policy Id from Workload Security.
-    Default: 34
+    Default: 67
   WSApiKey:
     Type: String
     Description: API Key from Workload Security Console
     ConstraintDescription: must be valid API Key from Workload Security.
-    Default: tmc125LnhwPHb0MTInHJuDutk8plZQN:7KfV1ZeN17MBUTQAVsWB965opbiQUf6nXqVd9acpPZYS2YXm5pfj1ZzGCptLnLxpRE
+    Default: 20SmJdKTNTX6qvR3ocB5yqR1c64:7SeRbuznYwqcSKiPJsAmYtKLqRwJRp2tLvePjbgXHUD8xMBKy9gBAm9Eaj71XF26Vk
 Mappings:
   ImageId:
     us-east-1:

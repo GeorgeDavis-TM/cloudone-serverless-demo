@@ -61,6 +61,15 @@ Parameters:
       can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and
       forward slash (/).
     Type: String
+  WSPolicyId:
+    Type: Number
+    Description: Policy ID of the security policy to be deployed on the EC2 Instance
+    ConstraintDescription: must be valid Policy Id from Workload Security.
+    Default: 1
+  WSApiKey:
+    Type: String
+    Description: API Key from Workload Security Console
+    ConstraintDescription: must be valid API Key from Workload Security.    
 
   # AdminIngressLocation:
   #   Description: >-
@@ -134,7 +143,9 @@ Resources:
         SubnetId: !GetAtt VPCStack.Outputs.PrivateSubnet1AID
         # PlayerPassword: !GetAtt Passwords.Outputs.PlayerPassword
         # SecretPassword: !GetAtt Passwords.Outputs.SecretPassword
-        KeyPairName: !GetAtt KeyPairStack.Outputs.KeyPairName
+        KeyPairName: !GetAtt KeyPairStack.Outputs.KeyPairName        
+        WSPolicyId: !Ref WSPolicyId
+        WSApiKey: !Ref WSApiKey
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}services/workload_security/templates/main.template.yaml'
 
   # ContainerSecurityStack:

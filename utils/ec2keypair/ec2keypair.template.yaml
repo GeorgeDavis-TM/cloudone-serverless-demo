@@ -6,6 +6,9 @@ Parameters:
     Description: Name used for the key pair to be generated.
     Type: String
     Default: lab-key-pair
+  CreateKeyPairLambdaFunctionName:
+    Default: CreateKeyPairLambdaFunction-C1SD
+    Type: String
 
 Resources:
 
@@ -27,15 +30,20 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              -
-                Effect: "Allow"
+              - Effect: "Allow"
                 Action:
-                  - "logs:*"
                   - "ec2:CreateKeyPair"
                   - "ec2:DeleteKeyPair"
                   - "ec2:DescribeKeyPairs"
-                Resource: "*"
-
+                Resource:
+                  - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${CreateKeyPairLambdaFunctionName}
+              - Effect: 'Allow'
+                Action:                  
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${CreateKeyPairLambdaFunctionName}:*
 
   CreateKeyPairLambdaFunction:
     Type: AWS::Lambda::Function
@@ -59,6 +67,7 @@ Resources:
                       response = ec2.delete_key_pair(KeyName=keyPairName)
                     cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
         Handler: index.lambda_handler
+        FunctionName: !Ref CreateKeyPairLambdaFunctionName
         Runtime: python3.7
         Role: !GetAtt CreateKeyPairLambdaExecutionRole.Arn
         MemorySize: 128

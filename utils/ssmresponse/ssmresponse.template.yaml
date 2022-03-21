@@ -21,6 +21,9 @@ Parameters:
       can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and
       forward slash (/).
     Type: String
+  SSMGetResponseLambdaFunctionName:
+    Default: SSMGetResponseLambdaFunction
+    Type: String
 
 Resources:
   SSMGetResponseRole:
@@ -43,9 +46,21 @@ Resources:
               - Effect: "Allow"
                 Action:                  
                   - 'ssm:GetCommandInvocation'
-                  - 'logs:*'
+                Resource: "*"
+              - Effect: "Allow"
+                Action:                  
                   - 'ec2:DescribeInstances'
                 Resource: "*"
+                Condition:
+                  StringEquals:
+                    'ec2:ResourceTag/Product': 'cloudone-serverless-demo'                    
+              - Effect: 'Allow'
+                Action:                  
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${SSMGetResponseLambdaFunctionName}:*
 
   SSMGetResponseLambdaFunction:
     Type: AWS::Lambda::Function
@@ -54,6 +69,7 @@ Resources:
         S3Bucket: !Sub '${QSS3BucketName}'
         S3Key: !Sub '${QSS3KeyPrefix}scripts/python/lambda/lambda-get-command-invocation.py.zip'        
       Handler: lambda-get-command-invocation.lambda_handler
+      FunctionName: !Ref SSMGetResponseLambdaFunctionName
       Runtime: python3.8
       Environment:
         Variables:

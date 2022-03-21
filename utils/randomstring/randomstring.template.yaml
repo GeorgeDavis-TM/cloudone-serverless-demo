@@ -1,5 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: Creating a random string custom resource
+Parameters:
+  RandomStringLambdaFunctionName:
+    Default: RandomStringLambdaFunction-C1SD
+    Type: String
 Resources:
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -18,10 +22,13 @@ Resources:
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Effect: "Allow"
-                Action:
-                  - "logs:*"
-                Resource: "*"
+              - Effect: 'Allow'
+                Action:                  
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${RandomStringLambdaFunctionName}:*
 
   RandomStringLambdaFunction:
     Type: AWS::Lambda::Function
@@ -45,6 +52,7 @@ Resources:
               physicalResourceId = event["PhysicalResourceId"]
             cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data, physicalResourceId)
       Handler: index.lambda_handler
+      FunctionName: !Ref RandomStringLambdaFunctionName
       Runtime: python3.7
       Role: !GetAtt LambdaExecutionRole.Arn
       MemorySize: 128

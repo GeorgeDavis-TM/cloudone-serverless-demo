@@ -28,7 +28,8 @@ Resources:
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
                 Resource:
-                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${RandomStringLambdaFunctionName}:*
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${RandomStringLambdaFunctionName}
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${RandomStringLambdaFunctionName}:log-stream:*
 
   RandomStringLambdaFunction:
     Type: AWS::Lambda::Function

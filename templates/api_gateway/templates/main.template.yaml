@@ -193,7 +193,9 @@ Resources:
                   - 'logs:CreateLogGroup'
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
-                Resource: !GetAtt APIGatewayCloudWatchLogGroup.Arn
+                Resource: 
+                  - !GetAtt APIGatewayCloudWatchLogGroup.Arn
+                  - !Sub ${APIGatewayCloudWatchLogGroup.Arn}:log-stream:*
 
   TriggerStateMachineLambdaFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -271,7 +273,8 @@ Resources:
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
                 Resource:
-                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${TriggerStateMachineLambdaFunctionName}:*
+                  - !GetAtt TriggerStateMachineLambdaFunctionLogGroup.Arn
+                  - !Sub ${TriggerStateMachineLambdaFunctionLogGroup.Arn}:log-stream:*
       Path: '/'
 
 # Outputs

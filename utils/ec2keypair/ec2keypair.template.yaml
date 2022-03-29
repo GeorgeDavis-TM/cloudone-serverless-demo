@@ -46,7 +46,8 @@ Resources:
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
                 Resource:
-                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${CreateKeyPairLambdaFunctionName}:*
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${CreateKeyPairLambdaFunctionName}
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${CreateKeyPairLambdaFunctionName}:log-stream:*
 
   CreateKeyPairLambdaFunction:
     Type: AWS::Lambda::Function

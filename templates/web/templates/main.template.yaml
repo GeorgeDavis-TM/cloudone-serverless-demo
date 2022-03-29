@@ -203,7 +203,8 @@ Resources:
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
                 Resource:
-                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${CopyFilesLambdaFunctionName}:*
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${CopyFilesLambdaFunctionName}
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${CopyFilesLambdaFunctionName}:log-stream:*                  
       Path: '/'
 
   DeployWebLambdaFunction:
@@ -320,7 +321,8 @@ Resources:
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
                 Resource: 
-                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${DeployWebLambdaFunctionName}:*
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${DeployWebLambdaFunctionName}
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${DeployWebLambdaFunctionName}:log-stream:*
       Path: '/'
 
   # Triggers an AWS Lambda function to copy web files and deploy to the Static S3 bucket.

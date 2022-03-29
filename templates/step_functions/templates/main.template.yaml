@@ -42,6 +42,7 @@ Resources:
               - 'sts:AssumeRole'
       Description: cloudone-serverless-demo-statemachine-IAM-Role
       ManagedPolicyArns:
+      # TODO: Implement least privilege access here
         - 'arn:aws:iam::aws:policy/AdministratorAccess'
       Path: /
       RoleName: cloudone-serverless-demo-statemachine-IAM-Role

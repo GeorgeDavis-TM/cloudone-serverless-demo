@@ -60,7 +60,8 @@ Resources:
                   - 'logs:CreateLogStream'
                   - 'logs:PutLogEvents'
                 Resource:
-                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${SSMGetResponseLambdaFunctionName}:*
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${SSMGetResponseLambdaFunctionName}
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${SSMGetResponseLambdaFunctionName}:log-stream:*
 
   SSMGetResponseLambdaFunction:
     Type: AWS::Lambda::Function

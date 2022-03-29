@@ -33,14 +33,13 @@ Resources:
               - Effect: 'Allow'
                 Action:   
                   - "ec2:DescribeKeyPairs"
-                Resource:
-                  - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${CreateKeyPairLambdaFunctionName}
+                Resource: '*'
               - Effect: "Allow"
                 Action:
                   - "ec2:CreateKeyPair"
                   - "ec2:DeleteKeyPair"                 
                 Resource:
-                  - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:key-pair:${KeyPairName}
+                  - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:key-pair/${KeyPairName}
               - Effect: 'Allow'
                 Action:                  
                   - 'logs:CreateLogGroup'

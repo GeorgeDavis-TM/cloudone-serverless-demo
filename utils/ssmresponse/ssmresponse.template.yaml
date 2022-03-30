@@ -46,6 +46,8 @@ Resources:
               - Effect: "Allow"
                 Action:                  
                   - 'ssm:GetCommandInvocation'
+                  - 'ssm:ListCommandInvocations'
+                  - 'ssm:ListCommands'
                 Resource: "*"
               - Effect: "Allow"
                 Action:                  

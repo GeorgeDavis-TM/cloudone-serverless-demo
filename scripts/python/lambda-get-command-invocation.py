@@ -36,6 +36,10 @@ def lambda_handler(event, context):
             )
             
             # print(str(ec2DescribeInstancesResponse))
+
+            if not ec2DescribeInstancesResponse["Reservations"]:
+                
+                raise Exception("Error: No running EC2 Instance(s) found. Ensure your EC2 Instance(s) are running to run SSM commands.")
             
             ec2Instances = ec2DescribeInstancesResponse["Reservations"][0]["Instances"]
             

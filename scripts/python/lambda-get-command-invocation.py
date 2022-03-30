@@ -49,38 +49,53 @@ def lambda_handler(event, context):
                 instanceId = ec2Instances[0]["InstanceId"]
             else:
                 raise Exception("Multiple instances found. Reduce the number of stack(s) deployed and try again.")
-
-            time.sleep(sleepTimer)
         
-            ssmClient = boto3.client('ssm', region_name=regionName)        
+            ssmClient = boto3.client('ssm', region_name=regionName)
             
-            waiter = ssmClient.get_waiter('command_executed')
-            
-            print(str(commandId), str(instanceId))
-
-            waiter.wait(
+            listCommandInvocationsResponse = ssmClient.list_command_invocations(
                 CommandId=commandId,
-                InstanceId=instanceId,
-                WaiterConfig={
-                    'Delay': 5,
-                    'MaxAttempts': 60
-                }
-            )    
-
-            getCommandInvocationResponse = ssmClient.get_command_invocation(
-                CommandId=commandId,
-                InstanceId=instanceId,
-                PluginName=pluginName
+                InstanceId=instanceId
             )
-            
-            print("GetCommandInvocationResponse - ", str(getCommandInvocationResponse))
 
-            if getCommandInvocationResponse["Status"] == "Success":
-                print("Success: " + getCommandInvocationResponse["StandardOutputContent"] + " - " + getCommandInvocationResponse["StandardOutputUrl"])
-                return True
-            else:
-                raise Exception("Error: " + getCommandInvocationResponse["StandardErrorContent"] + " - " + getCommandInvocationResponse["StandardErrorUrl"])
-                return False
+            statusComplete = listCommandInvocationsResponse["CommandInvocations"][0]["Status"]
+            
+            print("SSM Command Invocation Status - ", str(statusComplete))
+            
+            while statusComplete in ["Pending", "InProgress", "Delayed"]:
+                
+                listCommandInvocationsResponse = ssmClient.list_command_invocations(
+                    CommandId=commandId,
+                    InstanceId=instanceId,
+                    Details=True
+                )
+                
+                statusComplete = listCommandInvocationsResponse["CommandInvocations"][0]["Status"]
+                
+                print("SSM Command Invocation Status - ", str(statusComplete))
+                
+                if statusComplete != "Success":
+                    time.sleep(sleepTimer)
+                
+            if statusComplete in ["Cancelled", "Failed", "TimedOut", "AccessDenied", "DeliveryTimedOut", "ExecutionTimedOut", "Undeliverable", "InvalidPlatform", "Terminated"]:
+                
+                raise Exception("Execution Error: SSM Command interrupted. Check AWS Lambda function log group for more logs and details.")
+                
+            if statusComplete == "Success":
+
+                getCommandInvocationResponse = ssmClient.get_command_invocation(
+                    CommandId=commandId,
+                    InstanceId=instanceId,
+                    PluginName=pluginName
+                )
+                
+                print("GetCommandInvocationResponse - ", str(getCommandInvocationResponse))
+    
+                if getCommandInvocationResponse["Status"] == "Success":
+                    print("Success: " + getCommandInvocationResponse["StandardOutputContent"] + " - " + getCommandInvocationResponse["StandardOutputUrl"])
+                    return True
+                else:
+                    raise Exception("Error: " + getCommandInvocationResponse["StandardErrorContent"] + " - " + getCommandInvocationResponse["StandardErrorUrl"])
+                    return False
 
         except botocore.exceptions.WaiterError as error:
             print("WaiterError: Waiter was unsuccessful.", error)            

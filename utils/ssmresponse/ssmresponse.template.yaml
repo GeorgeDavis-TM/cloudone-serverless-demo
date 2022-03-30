@@ -56,7 +56,7 @@ Resources:
                   - 'logs:CreateLogGroup'
                   - 'logs:CreateLogStream'
                 Resource:
-                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${SSMGetResponseLambdaFunctionName}
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${SSMGetResponseLambdaFunctionName}:*
               - Effect: 'Allow'
                 Action:            
                   - 'logs:PutLogEvents'

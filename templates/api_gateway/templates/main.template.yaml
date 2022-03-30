@@ -193,25 +193,25 @@ Resources:
                   - 'logs:CreateLogGroup'
                   - 'logs:CreateLogStream'
                 Resource: 
-                  - !GetAtt APIGatewayCloudWatchLogGroup.Arn
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${APIGatewayCloudWatchLogGroup}:*
               - Effect: 'Allow'
                 Action:
                   - 'logs:PutLogEvents'
-                Resource: 
-                  - !Sub ${APIGatewayCloudWatchLogGroup.Arn}:log-stream:*
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${APIGatewayCloudWatchLogGroup}:log-stream:*
 
-  TriggerStateMachineLambdaFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub /aws/lambda/${TriggerStateMachineLambdaFunctionName}
-      RetentionInDays: 14
-      Tags:
-        - Key: Owner
-          Value: TrendMicro
-        - Key: Product
-          Value: cloudone-serverless-demo
-        - Key: Name
-          Value: cloudone-serverless-demo
+  # TriggerStateMachineLambdaFunctionLogGroup:
+  #   Type: AWS::Logs::LogGroup
+  #   Properties:
+  #     LogGroupName: !Sub /aws/lambda/${TriggerStateMachineLambdaFunctionName}
+  #     RetentionInDays: 14
+  #     Tags:
+  #       - Key: Owner
+  #         Value: TrendMicro
+  #       - Key: Product
+  #         Value: cloudone-serverless-demo
+  #       - Key: Name
+  #         Value: cloudone-serverless-demo
 
   TriggerStateMachineLambdaFunction:
     Type: AWS::Lambda::Function
@@ -275,12 +275,12 @@ Resources:
                   - 'logs:CreateLogGroup'
                   - 'logs:CreateLogStream'
                 Resource:
-                  - !GetAtt TriggerStateMachineLambdaFunctionLogGroup.Arn
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${TriggerStateMachineLambdaFunctionName}:*
               - Effect: 'Allow'
                 Action:                  
                   - 'logs:PutLogEvents'
                 Resource:
-                  - !Sub ${TriggerStateMachineLambdaFunctionLogGroup.Arn}:log-stream:*
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${TriggerStateMachineLambdaFunctionName}:log-stream:*
       Path: '/'
 
 # Outputs

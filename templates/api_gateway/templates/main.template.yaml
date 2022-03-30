@@ -189,12 +189,15 @@ Resources:
                 Action: 'lambda:InvokeFunction'
                 Resource: !GetAtt TriggerStateMachineLambdaFunction.Arn
               - Effect: 'Allow'
-                Action:                  
+                Action:
                   - 'logs:CreateLogGroup'
                   - 'logs:CreateLogStream'
-                  - 'logs:PutLogEvents'
                 Resource: 
                   - !GetAtt APIGatewayCloudWatchLogGroup.Arn
+              - Effect: 'Allow'
+                Action:
+                  - 'logs:PutLogEvents'
+                Resource: 
                   - !Sub ${APIGatewayCloudWatchLogGroup.Arn}:log-stream:*
 
   TriggerStateMachineLambdaFunctionLogGroup:
@@ -271,9 +274,12 @@ Resources:
                 Action:                  
                   - 'logs:CreateLogGroup'
                   - 'logs:CreateLogStream'
-                  - 'logs:PutLogEvents'
                 Resource:
                   - !GetAtt TriggerStateMachineLambdaFunctionLogGroup.Arn
+              - Effect: 'Allow'
+                Action:                  
+                  - 'logs:PutLogEvents'
+                Resource:
                   - !Sub ${TriggerStateMachineLambdaFunctionLogGroup.Arn}:log-stream:*
       Path: '/'
 

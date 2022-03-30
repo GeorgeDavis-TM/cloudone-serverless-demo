@@ -26,9 +26,12 @@ Resources:
                 Action:                  
                   - 'logs:CreateLogGroup'
                   - 'logs:CreateLogStream'
-                  - 'logs:PutLogEvents'
                 Resource:
                   - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${RandomStringLambdaFunctionName}
+              - Effect: 'Allow'
+                Action:                  
+                  - 'logs:PutLogEvents'
+                Resource:
                   - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${RandomStringLambdaFunctionName}:log-stream:*
 
   RandomStringLambdaFunction:

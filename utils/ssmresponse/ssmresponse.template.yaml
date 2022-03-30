@@ -50,17 +50,17 @@ Resources:
               - Effect: "Allow"
                 Action:                  
                   - 'ec2:DescribeInstances'
-                Resource: "*"
-                Condition:
-                  StringEquals:
-                    'ec2:ResourceTag/Product': 'cloudone-serverless-demo'                    
+                Resource: "*"                   
               - Effect: 'Allow'
                 Action:                  
                   - 'logs:CreateLogGroup'
                   - 'logs:CreateLogStream'
-                  - 'logs:PutLogEvents'
                 Resource:
                   - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${SSMGetResponseLambdaFunctionName}
+              - Effect: 'Allow'
+                Action:            
+                  - 'logs:PutLogEvents'
+                Resource:
                   - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${SSMGetResponseLambdaFunctionName}:log-stream:*
 
   SSMGetResponseLambdaFunction:

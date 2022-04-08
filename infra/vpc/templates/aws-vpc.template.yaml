@@ -1568,6 +1568,50 @@ Resources:
           - !Ref 'AWS::NoValue'
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
       VpcId: !Ref 'VPC'
+  EC2VpcEndpointSecurityGroup:
+      Type: 'AWS::EC2::SecurityGroup'
+      Properties:
+        VpcId: !Ref 'VPC'
+        GroupDescription: 'Security group for EC2 VPC Endpoint'
+  EC2VpcEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      SecurityGroupIds: 
+        - !GetAtt VpcEndpointSecurityGroup.GroupId
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ec2'
+      SubnetIds: 
+        - !Ref 'PrivateSubnet1A'
+      VpcEndpointType: Interface
+      VpcId: !Ref 'VPC'
+  SSMVpcEndpointSecurityGroup:
+      Type: 'AWS::EC2::SecurityGroup'
+      Properties:
+        VpcId: !Ref 'VPC'
+        GroupDescription: 'Security group for SSM VPC Endpoint'
+  SSMVpcEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      SecurityGroupIds: 
+        - !GetAtt VpcEndpointSecurityGroup.GroupId
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.ssm'
+      SubnetIds: 
+        - !Ref 'PrivateSubnet1A'
+      VpcEndpointType: Interface
+      VpcId: !Ref 'VPC'
+  VpcEndpointSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: 'Security group for VPC Endpoint'
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId: !GetAtt EC2VpcEndpointSecurityGroup.GroupId
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId: !GetAtt SSMVpcEndpointSecurityGroup.GroupId
 Outputs:
   NAT1EIP:
     Condition: NATGatewaysCondition
@@ -1812,3 +1856,12 @@ Outputs:
     Description: VPC ID
     Export:
       Name: !Sub '${AWS::StackName}-VPCID'
+  EC2VpcEndpoint:
+    Value: !Ref 'EC2VpcEndpoint'
+    Description: Endpoint ID for EC2 VPC Endpoint
+  SSMVpcEndpoint:
+    Value: !Ref 'SSMVpcEndpoint'
+    Description: Endpoint ID for SSM VPC Endpoint
+  VpcEndpointSecurityGroupID:
+    Value: !GetAtt 'VpcEndpointSecurityGroup.GroupId'
+    Description: Security Group ID for the VPC Endpoint

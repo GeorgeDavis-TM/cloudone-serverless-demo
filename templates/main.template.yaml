@@ -212,6 +212,7 @@ Resources:
         QSS3KeyPrefix: !Sub '${QSS3KeyPrefix}'
         C1SDStateMachineArn: !Sub '${StateMachineStack.Outputs.C1SDStateMachineArn}'
         LambdaVpcConfigSubnetId: !Sub '${VPCStack.Outputs.PrivateSubnet1AID}'
+        VpcEndpointSecurityGroupID: !Sub '${VPCStack.Outputs.VpcEndpointSecurityGroupID}'
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/api_gateway/templates/main.template.yaml'
 
   WebStack:

@@ -45,7 +45,10 @@ Parameters:
     Type: String
   LambdaVpcConfigSubnetId: 
     Description: VPC Subnet ID for the Lambda functions deployed in relation to the API Gateway
-    Type: AWS::EC2::Subnet::Id
+    Type: AWS::EC2::Subnet::Id  
+  VpcEndpointSecurityGroupID:
+    Description: Security Group ID for the VPC Endpoint
+    Type: AWS::EC2::SecurityGroup::Id
   DefaultAPIGatewayStage:
     Default: prod
     Description: Environment name for the API Gateway
@@ -252,6 +255,8 @@ Resources:
       Role: !GetAtt TriggerStateMachineLambdaIAMRole.Arn
       Timeout: 180
       VpcConfig:
+        SecurityGroupIds:
+          - !Ref VpcEndpointSecurityGroupID
         SubnetIds:
           - !Ref LambdaVpcConfigSubnetId
 
@@ -267,6 +272,8 @@ Resources:
                 - 'lambda.amazonaws.com'
             Action:
               - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole'
       Policies:
         - PolicyName: stateMachineTriggerPolicy
           PolicyDocument:
@@ -287,6 +294,13 @@ Resources:
                   - 'logs:PutLogEvents'
                 Resource:
                   - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${TriggerStateMachineLambdaFunctionName}:log-stream:*
+              - Effect: 'Allow'
+                Action:                  
+                  - 'ec2:DescribeSecurityGroups'
+                  - 'ec2:DescribeSubnets'
+                  - 'ec2:DescribeVpcs'
+                Resource:
+                  - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${TriggerStateMachineLambdaFunctionName}
       Path: '/'
 
 # Outputs

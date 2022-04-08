@@ -43,6 +43,9 @@ Parameters:
     ConstraintDescription: must be a valid AWS ARN
     Description: ARN of the State Machine that runs the Cloud One Serverless Demo workflow.
     Type: String
+  LambdaVpcConfigSubnetId: 
+    Description: VPC Subnet ID for the Lambda functions deployed in relation to the API Gateway
+    Type: AWS::EC2::Subnet::Id
   DefaultAPIGatewayStage:
     Default: prod
     Description: Environment name for the API Gateway
@@ -248,6 +251,9 @@ Resources:
           STATE_MACHINE_ARN: !Ref C1SDStateMachineArn
       Role: !GetAtt TriggerStateMachineLambdaIAMRole.Arn
       Timeout: 180
+      VpcConfig:
+        SubnetIds:
+          - !Ref LambdaVpcConfigSubnetId
 
   TriggerStateMachineLambdaIAMRole:
     Type: AWS::IAM::Role

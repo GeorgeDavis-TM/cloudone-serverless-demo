@@ -1,0 +1,104 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A Step Functions state machine for Cloud One Serverless Demo.
+Parameters:
+  # S3 Bucket Path  
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen
+      (-).
+    Default: cloudonedemo
+    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name
+      can include numbers, lowercase letters, uppercase letters, and hyphens (-).
+      It cannot start or end with a hyphen (-).
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/.]*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), dots(.) and forward slash (/).
+    Default: "cloudone-serverless-demo/"
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and
+      forward slash (/).
+    Type: String
+  C1ASSecurityLambdaFunctionName:
+    Default: C1ASSecurityLambdaFunction-C1SD
+    Type: String  
+
+Resources:           
+
+  C1ASSecurityLambdaFunction:    
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub '${QSS3BucketName}'
+        S3Key: !Sub '${QSS3KeyPrefix}scripts/python/lambda/lambda-generate-appsec-secrets.py.zip'
+      Handler: lambda-generate-appsec-secrets.lambda_handler      
+      FunctionName: !Ref C1ASSecurityLambdaFunctionName
+      Description: AWS Lambda function to generate the C1AS Security Group key and secret to be used in all deployed lambda functions
+      Runtime: python3.8
+      Environment:
+        Variables:
+          awsDeployRegion: !Ref "AWS::Region"
+          c1asSecurityGroupName: CloudOneServerlessDemo-MgmtApis
+          c1asApiAuthToken: ssm:WSApiKey
+      Role: !GetAtt C1ASSecurityLambdaRole.Arn
+      MemorySize: 250
+      Timeout: 180            
+
+  C1ASSecurityLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service:
+                - 'lambda.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: C1ASSecurityLambdaPolicy-C1SD
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - 'ssm:GetParameter'
+                Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/WSApiKey
+              - Effect: "Allow"
+                Action:
+                  - 'ssm:PutParameter'                
+                Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/TREND_AP_KEY
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/TREND_AP_SECRET
+        - PolicyName: C1ASSecurityLambdaLogsPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${C1ASSecurityLambdaFunctionName}:*
+              - Effect: "Allow"
+                Action:
+                  - 'logs:PutLogEvents'
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${C1ASSecurityLambdaFunctionName}:log-stream:*
+      Path: '/'
+
+  # Triggers an AWS Lambda function to generate the C1AS Security Group key and secret to be used in all deployed lambda functions.
+  C1ASSecurityCustomResource:
+    Type: 'Custom::C1ASSecurityCustomResource'
+    Properties:
+      ServiceToken: !GetAtt C1ASSecurityLambdaFunction.Arn
+
+# Outputs
+Outputs:
+  C1ASSecurityLambdaFunction:
+    Description: 'Custom resource to trigger AWS Lambda function to generate C1AS key and secret'
+    Value: !GetAtt 'C1ASSecurityLambdaFunction.Arn'

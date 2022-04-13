@@ -84,6 +84,18 @@ Parameters:
   #   ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
   
 Resources:
+  SSMWSApiKey:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: WSApiKey
+      Type: String
+      Value: !Ref WSApiKey
+  SSMWSPolicyId:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: WSPolicyId
+      Type: String
+      Value: !Ref WSPolicyId
 
   # ApplicationSecurityStack:
   #   Type: AWS::CloudFormation::Stack
@@ -180,12 +192,16 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}utils/randomstring/randomstring.template.yaml'
+    DependsOn:
+      - SecurityStack
 
   KeyPairStack:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}utils/ec2keypair/ec2keypair.template.yaml'
       TimeoutInMinutes: 20
+    DependsOn:
+      - SecurityStack
 
   SSMGetResponseStack:
     Type: AWS::CloudFormation::Stack
@@ -194,6 +210,8 @@ Resources:
         QSS3BucketName: !Sub '${QSS3BucketName}'
         QSS3KeyPrefix: !Sub '${QSS3KeyPrefix}'
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}utils/ssmresponse/ssmresponse.template.yaml'
+    DependsOn:
+      - SecurityStack
 
   StateMachineStack:
     Type: AWS::CloudFormation::Stack
@@ -214,6 +232,8 @@ Resources:
         LambdaVpcConfigSubnetId: !Sub '${VPCStack.Outputs.PrivateSubnet1AID}'
         VpcEndpointSecurityGroupID: !Sub '${VPCStack.Outputs.VpcEndpointSecurityGroupID}'
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/api_gateway/templates/main.template.yaml'
+    DependsOn:
+      - SecurityStack
 
   WebStack:
     Type: AWS::CloudFormation::Stack
@@ -223,6 +243,17 @@ Resources:
         QSS3KeyPrefix: !Sub '${QSS3KeyPrefix}'
         APIGatewayInvokeURL: !Sub '${APIGatewayStack.Outputs.APIGatewayInvokeURL}${APIGatewayStack.Outputs.APIGatewayStageName}'        
       TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/web/templates/main.template.yaml'
+    DependsOn:
+      - SecurityStack
+
+  SecurityStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:      
+      Parameters:
+        QSS3BucketName: !Sub '${QSS3BucketName}'
+        QSS3KeyPrefix: !Sub '${QSS3KeyPrefix}'
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/security/templates/main.template.yaml'
+    DependsOn: SSMWSApiKey
 
 Outputs:
   VPCCIDR: 
@@ -233,13 +264,21 @@ Outputs:
     Value: !GetAtt VPCStack.Outputs.VPCID
     Description: VPC ID
 
-  PublicSubnet2ID:
-    Value: !GetAtt VPCStack.Outputs.PublicSubnet2ID
-    Description: PublicSubnet2 ID
+  PublicSubnet1ID:
+    Value: !GetAtt VPCStack.Outputs.PublicSubnet1ID
+    Description: PublicSubnet1 ID
 
-  PrivateSubnet2AID: 
-    Value: !GetAtt VPCStack.Outputs.PrivateSubnet2AID
-    Description: PrivateSubnet2A ID
+  PrivateSubnet1AID: 
+    Value: !GetAtt VPCStack.Outputs.PrivateSubnet1AID
+    Description: PrivateSubnet1A ID
+    
+  # PublicSubnet2ID:
+  #   Value: !GetAtt VPCStack.Outputs.PublicSubnet2ID
+  #   Description: PublicSubnet2 ID
+
+  # PrivateSubnet2AID: 
+  #   Value: !GetAtt VPCStack.Outputs.PrivateSubnet2AID
+  #   Description: PrivateSubnet2A ID
 
   PlayerPassword:
     Value: !GetAtt Passwords.Outputs.PlayerPassword

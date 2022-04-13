@@ -1,3 +1,4 @@
+import trend_app_protect.start
 import os
 import time
 import boto3

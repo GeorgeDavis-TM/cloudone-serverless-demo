@@ -57,27 +57,34 @@ Resources:
     Properties:
         Code:
           ZipFile: |
-                  import cfnresponse
-                  import json
-                  import boto3
-                  def lambda_handler(event, context):
-                    print(f"Data in event: {event}")
-                    response_data = {}
-                    keyPairName = event["ResourceProperties"]["KeyPairName"]
-                    ec2 = boto3.client('ec2')
-                    if event["RequestType"] == "Create":
-                      try:
-                        ec2.describe_key_pairs(KeyNames=[keyPairName,],)
-                      except Exception as e:
-                        response = ec2.create_key_pair(KeyName=keyPairName)
-                    elif event["RequestType"] == "Delete":
-                      response = ec2.delete_key_pair(KeyName=keyPairName)
-                    cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+            import trend_app_protect.start
+            import cfnresponse
+            import json
+            import boto3
+            def lambda_handler(event, context):
+              print(f"Data in event: {event}")
+              response_data = {}
+              keyPairName = event["ResourceProperties"]["KeyPairName"]
+              ec2 = boto3.client('ec2')
+              if event["RequestType"] == "Create":
+                try:
+                  ec2.describe_key_pairs(KeyNames=[keyPairName,],)
+                except Exception as e:
+                  response = ec2.create_key_pair(KeyName=keyPairName)
+              elif event["RequestType"] == "Delete":
+                response = ec2.delete_key_pair(KeyName=keyPairName)
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
         Handler: index.lambda_handler
         FunctionName: !Ref CreateKeyPairLambdaFunctionName
-        Runtime: python3.7
+        Runtime: python3.8
+        Layers: 
+          - !Sub arn:aws:lambda:${AWS::Region}:800880067056:layer:CloudOne-ApplicationSecurity-python:1
+        Environment:
+          Variables:          
+            TREND_AP_KEY: '{{resolve:ssm:TREND_AP_KEY}}'
+            TREND_AP_SECRET: '{{resolve:ssm:TREND_AP_SECRET}}'
         Role: !GetAtt CreateKeyPairLambdaExecutionRole.Arn
-        MemorySize: 128
+        MemorySize: 250
         Timeout: 10
 
   KeyPair:

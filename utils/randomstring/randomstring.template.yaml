@@ -39,6 +39,7 @@ Resources:
     Properties:
       Code:
         ZipFile: |
+          import trend_app_protect.start
           import cfnresponse
           from random import choice
           from string import ascii_lowercase, digits, ascii_uppercase
@@ -57,9 +58,15 @@ Resources:
             cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data, physicalResourceId)
       Handler: index.lambda_handler
       FunctionName: !Ref RandomStringLambdaFunctionName
-      Runtime: python3.7
+      Runtime: python3.8
+      Layers: 
+        - !Sub arn:aws:lambda:${AWS::Region}:800880067056:layer:CloudOne-ApplicationSecurity-python:1
+      Environment:
+        Variables:          
+          TREND_AP_KEY: '{{resolve:ssm:TREND_AP_KEY}}'
+          TREND_AP_SECRET: '{{resolve:ssm:TREND_AP_SECRET}}'
       Role: !GetAtt LambdaExecutionRole.Arn
-      MemorySize: 128
+      MemorySize: 250
       Timeout: 10
 
   # Custom Resource 1

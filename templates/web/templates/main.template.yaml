@@ -84,7 +84,8 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        ZipFile: |          
+        ZipFile: |
+          import trend_app_protect.start
           import os
           import boto3
           import cfnresponse
@@ -103,21 +104,22 @@ Resources:
 
             try:
 
-              if event['RequestType'] == 'Create':
-                regionName = str(os.environ.get("CUSTOM_REGION_NAME")) if 'CUSTOM_REGION_NAME' in os.environ else None
-                srcS3Bucket = str(os.environ.get("CUSTOM_S3_SRC_BUCKET")) if 'CUSTOM_S3_SRC_BUCKET' in os.environ else None
-                srcS3KeyPrefix = str(os.environ.get("CUSTOM_S3_KEY_PREFIX")) if 'CUSTOM_S3_KEY_PREFIX' in os.environ else None
-                destS3Bucket = str(os.environ.get("CUSTOM_S3_DEST_BUCKET")) if 'CUSTOM_S3_DEST_BUCKET' in os.environ else None
-                s3ObjectList = str(os.environ.get("CUSTOM_S3_OBJECT_LIST")) if 'CUSTOM_S3_OBJECT_LIST' in os.environ else None
+              regionName = str(os.environ.get("CUSTOM_REGION_NAME")) if 'CUSTOM_REGION_NAME' in os.environ else None
+              srcS3Bucket = str(os.environ.get("CUSTOM_S3_SRC_BUCKET")) if 'CUSTOM_S3_SRC_BUCKET' in os.environ else None
+              srcS3KeyPrefix = str(os.environ.get("CUSTOM_S3_KEY_PREFIX")) if 'CUSTOM_S3_KEY_PREFIX' in os.environ else None
+              destS3Bucket = str(os.environ.get("CUSTOM_S3_DEST_BUCKET")) if 'CUSTOM_S3_DEST_BUCKET' in os.environ else None
+              s3ObjectList = str(os.environ.get("CUSTOM_S3_OBJECT_LIST")) if 'CUSTOM_S3_OBJECT_LIST' in os.environ else None
 
-                if s3ObjectList[-1] == ",":
-                  s3ObjectList = s3ObjectList[:-1].replace(" ", "").split(",")
-                else:
-                  s3ObjectList = s3ObjectList.replace(" ", "").split(",")
+              if s3ObjectList[-1] == ",":
+                s3ObjectList = s3ObjectList[:-1].replace(" ", "").split(",")
+              else:
+                s3ObjectList = s3ObjectList.replace(" ", "").split(",")
 
-                if regionName and srcS3Bucket and destS3Bucket and s3ObjectList:
+              if regionName and srcS3Bucket and destS3Bucket and s3ObjectList:
 
-                  s3Client = boto3.client('s3', region_name=regionName)
+                s3Client = boto3.client('s3', region_name=regionName)
+
+                if event['RequestType'] == 'Create':                
 
                   for s3ObjKey in s3ObjectList:
 
@@ -136,6 +138,24 @@ Resources:
                     )
 
                     print(str(s3CopyObjectResponse))
+
+                elif event['RequestType'] == 'Delete':
+
+                  for s3ObjKey in s3ObjectList:
+
+                    srcS3ObjKey = None
+                    if srcS3KeyPrefix:
+                      srcS3ObjKey = "/" + srcS3KeyPrefix + "templates/web/public_html/" + s3ObjKey
+                    else:
+                      srcS3ObjKey = "/" + s3ObjKey
+
+                    s3DeleteObjectResponse = s3Client.delete_object(
+                      Bucket=destS3Bucket,
+                      Key=s3ObjKey
+                    )
+
+                    print(str(s3DeleteObjectResponse))
+                  
             except Exception as e:
               logger.info("Exception: {}".format(e))
               status = cfnresponse.FAILED
@@ -144,8 +164,10 @@ Resources:
       Description: AWS Lambda function to trigger the AWS State Machine workflow - C1SDStateMachine
       FunctionName: !Ref CopyFilesLambdaFunctionName
       Handler: index.handler
-      MemorySize: 128
+      MemorySize: 250
       Runtime: python3.8
+      Layers: 
+        - !Sub arn:aws:lambda:${AWS::Region}:800880067056:layer:CloudOne-ApplicationSecurity-python:1
       Environment:
         Variables:
           CUSTOM_REGION_NAME: !Ref "AWS::Region"
@@ -153,6 +175,8 @@ Resources:
           CUSTOM_S3_KEY_PREFIX: !Ref QSS3KeyPrefix
           CUSTOM_S3_DEST_BUCKET: !Ref S3StaticWebBucket
           CUSTOM_S3_OBJECT_LIST: 'index.html,error.html,bootstrap-filestyle.min.js'
+          TREND_AP_KEY: '{{resolve:ssm:TREND_AP_KEY}}'
+          TREND_AP_SECRET: '{{resolve:ssm:TREND_AP_SECRET}}'
       Role: !GetAtt C1SDLambdaCopyS3ObjPolicy.Arn      
       Timeout: 180
 
@@ -214,7 +238,8 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        ZipFile: |          
+        ZipFile: |
+          import trend_app_protect.start         
           import os
           import boto3
           import cfnresponse
@@ -276,15 +301,19 @@ Resources:
       Description: AWS Lambda function to trigger the AWS State Machine workflow - C1SDStateMachine
       FunctionName: !Ref DeployWebLambdaFunctionName
       Handler: index.handler
-      MemorySize: 128
+      MemorySize: 250
       Runtime: python3.8
+      Layers: 
+        - !Sub arn:aws:lambda:${AWS::Region}:800880067056:layer:CloudOne-ApplicationSecurity-python:1
       Environment:
         Variables:          
           CUSTOM_REGION_NAME: !Ref "AWS::Region"
           CUSTOM_S3_BUCKET: !Ref S3StaticWebBucket
           CUSTOM_S3_OBJECT_LIST: 'index.html,error.html'
           CUSTOM_INVOKE_URL: !Ref APIGatewayInvokeURL
-      Role: !GetAtt C1SDLambdaDeployS3WebPolicy.Arn      
+          TREND_AP_KEY: '{{resolve:ssm:TREND_AP_KEY}}'
+          TREND_AP_SECRET: '{{resolve:ssm:TREND_AP_SECRET}}'
+      Role: !GetAtt C1SDLambdaDeployS3WebPolicy.Arn
       Timeout: 180
 
   C1SDLambdaDeployS3WebPolicy:

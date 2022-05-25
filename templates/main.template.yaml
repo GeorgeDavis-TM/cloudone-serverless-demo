@@ -97,10 +97,15 @@ Resources:
       Type: String
       Value: !Ref WSPolicyId
 
-  # ApplicationSecurityStack:
-  #   Type: AWS::CloudFormation::Stack
-  #   Properties:
-  #       TemplateURL:  !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}services/application_security/templates/main.template.yaml'
+  ApplicationSecurityStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        LambdaVpcConfigSubnetId: !Sub '${VPCStack.Outputs.PrivateSubnet1AID}'
+        VpcEndpointSecurityGroupID: !Sub '${VPCStack.Outputs.VpcEndpointSecurityGroupID}'
+      TemplateURL: !Sub 'https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}services/application_security/templates/main.template.yaml'
+    DependsOn:
+      - SecurityStack
 
   FileStorageSecurityStack:
     Type: AWS::CloudFormation::Stack

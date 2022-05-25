@@ -23,8 +23,6 @@ Metadata:
         default: "S3 Key Prefix for the Deployment resources"
       C1SDStateMachineArn:
         default: "ARN of the C1SD State Machine"
-      # FSSIngestBucket:
-      #   default: "FSS S3 Ingest Bucket"
 
 Parameters:
   QSS3BucketName:
@@ -308,7 +306,6 @@ Resources:
                   - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${TriggerStateMachineLambdaFunctionName}
       Path: '/'
 
-# Outputs
 Outputs:
   APIGatewayArn:
     Value: !Ref APIGatewayRestApi

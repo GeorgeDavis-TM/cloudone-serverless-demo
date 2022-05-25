@@ -1,0 +1,297 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Trend Micro Cloud One Application Security Demo - App Deployment.
+
+Parameters:
+  DefaultAppSecAPIGatewayStage:
+    Default: prod
+    Description: Environment name for the API Gateway
+    Type: String
+  AppSecC1SDDemoAppLambdaFunctionName:
+    Type: String
+    Default: AppSecDemoAppLambdaFunction-C1SD
+  LambdaVpcConfigSubnetId: 
+    Description: VPC Subnet ID for the Lambda functions deployed in relation to the API Gateway
+    Type: AWS::EC2::Subnet::Id  
+  VpcEndpointSecurityGroupID:
+    Description: Security Group ID for the VPC Endpoint
+    Type: AWS::EC2::SecurityGroup::Id
+
+Resources:
+  AppSecAPIGatewayRestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: ApplicationSecurityC1SDAPI      
+      Description: Cloud One Application Security - C1SD API
+      EndpointConfiguration:
+          Types: 
+            - REGIONAL
+      BinaryMediaTypes:
+        - 'multipart/form-data'
+      ApiKeySourceType: HEADER
+      DisableExecuteApiEndpoint: false
+      FailOnWarnings: true
+      Tags:
+        - Key: Owner
+          Value: TrendMicro
+        - Key: Product
+          Value: cloudone-serverless-demo
+        - Key: Name
+          Value: ApplicationSecurityC1SDAPI
+
+  # ApiGatewayResource:
+  #   Type: "AWS::ApiGateway::Resource"
+  #   Properties:
+  #     RestApiId: !Ref ApiGateway
+  #     ParentId: !GetAtt ApiGateway.RootResourceId
+  #     PathPart: !Ref ApiGatewayPath
+
+  # ApiGatwayGetMethod:
+  #   Type: "AWS::ApiGateway::Method"
+  #   Properties:
+  #     MethodResponses:
+  #       - StatusCode: 200
+  #         ResponseModels:
+  #           application/json: "Empty"
+
+  AppSecAPIGatewayGetMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: GET
+      Integration:
+        ConnectionType: INTERNET
+        Credentials: !GetAtt AppSecAPIGatewayIAMRole.Arn
+        IntegrationHttpMethod: POST
+        PassthroughBehavior: WHEN_NO_MATCH
+        TimeoutInMillis: 29000
+        Type: AWS_PROXY
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AppSecC1SDDemoAppLambdaFunction.Arn}/invocations'
+      ResourceId: !GetAtt AppSecAPIGatewayRestApi.RootResourceId
+      RestApiId: !Ref AppSecAPIGatewayRestApi
+
+  AppSecAPIGatewayStage:
+    Type: AWS::ApiGateway::Stage
+    Properties: 
+      AccessLogSetting: 
+        DestinationArn: !GetAtt AppSecAPIGatewayCloudWatchLogGroup.Arn
+        Format: >-
+          { "requestId":"$context.requestId", "ip": "$context.identity.sourceIp", "requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod","routeKey":"$context.routeKey", "status":"$context.status","protocol":"$context.protocol", "responseLength":"$context.responseLength" }
+      DeploymentId: !Ref AppSecAPIGatewayDeployment
+      Description: !Join
+        - ''
+        - - 'Stage for the Cloud One Application Security - C1SD API - '
+          - !Ref DefaultAppSecAPIGatewayStage
+          - '.'
+      MethodSettings: 
+        - ResourcePath: /
+          HttpMethod: GET
+          LoggingLevel: INFO
+          MetricsEnabled: true
+          DataTraceEnabled: false
+          ThrottlingBurstLimit: 50
+          ThrottlingRateLimit: 100
+      RestApiId: !Ref AppSecAPIGatewayRestApi
+      StageName: !Ref DefaultAppSecAPIGatewayStage
+      Tags:
+        - Key: Owner
+          Value: TrendMicro
+        - Key: Product
+          Value: cloudone-serverless-demo
+        - Key: Name
+          Value: !Join
+            - ''
+            - - 'ApplicationSecurityC1SDAPI'
+              - "-"
+              - !Ref DefaultAppSecAPIGatewayStage
+
+  AppSecAPIGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment    
+    Properties:
+      RestApiId: !Ref AppSecAPIGatewayRestApi
+    DependsOn:
+      - AppSecAPIGatewayGetMethod
+
+  AppSecAPIGatewayCloudWatchLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: AppSecC1SDAPIGatewayCloudWatchLogGroup
+      RetentionInDays: 14
+      Tags:
+        - Key: Owner
+          Value: TrendMicro
+        - Key: Product
+          Value: cloudone-serverless-demo
+        - Key: Name
+          Value: AppSecC1SDAPIGatewayCloudWatchLogGroup
+
+  AppSecAPIGatewayIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: ''
+            Effect: 'Allow'
+            Principal:
+              Service:
+                - 'apigateway.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+      Path: '/'
+      Policies:
+        - PolicyName: AppSecC1SDDemoAppLambdaAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action: 'lambda:InvokeFunction'
+                Resource: !GetAtt AppSecC1SDDemoAppLambdaFunction.Arn
+              - Effect: 'Allow'
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                Resource: 
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${AppSecAPIGatewayCloudWatchLogGroup}:*
+              - Effect: 'Allow'
+                Action:
+                  - 'logs:PutLogEvents'
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${AppSecAPIGatewayCloudWatchLogGroup}:log-stream:*
+
+  AppSecC1SDDemoAppLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+            import trend_app_protect.start
+            from trend_app_protect.api.aws_lambda import protect_handler
+            from trend_app_protect.exceptions import TrendAppProtectBlocked
+            import os
+
+            @protect_handler
+            def lambda_handler(event, context):
+                print(f'Event: {event}')
+
+                try:
+                    query_entry = event['queryStringParameters']['name']
+
+                    if os.path.isfile(query_entry):
+                        with open(query_entry, 'r') as f:
+                            file_contents = f.read()
+
+                            if query_entry.lower() == '../../proc/self/environ':
+                                split_vars = file_contents.split(':')
+                                output = '<br>'.join(split_vars)
+                                print(file_contents)
+
+                            else:
+                                output = file_contents.replace('\n', '<br>')
+
+                    else:
+                        output = f'Hello {query_entry}!'
+
+                except (KeyError, TypeError):
+                    output = ''
+
+                except TrendAppProtectBlocked:
+                    output = 'Suspicious activity blocked. Please check the console for more information.'
+
+                return {
+                    'body': f"""<html>
+                <head>
+                    <title>Hello World!</title>
+                </head>
+                <body>
+                    <h1>Hello World!</h1>
+                    <h2>Name</h2>
+
+                    <p>Please enter your name:
+                    <form action="?" method="get">
+                      <input type="text" id="name" name="name"><br><br>
+                      <input type="submit" value="Submit">
+                    </form>
+
+                    <h2>Output</h2>
+                    <p>{output}</p>
+                </body>
+                </html>""",
+                    'headers': {
+                        'Content-Type': 'text/html'
+
+                    },
+                    'statusCode': 200
+                }
+      Description: Cloud One Application Security Serverless Demo App Lambda Function 
+      FunctionName: !Ref AppSecC1SDDemoAppLambdaFunctionName
+      Handler: index.lambda_handler
+      MemorySize: 250
+      Runtime: python3.8
+      Layers: 
+        - !Sub arn:aws:lambda:${AWS::Region}:800880067056:layer:CloudOne-ApplicationSecurity-python:1
+      Environment:
+        Variables:
+          TREND_AP_KEY: '{{resolve:ssm:TREND_AP_KEY}}'
+          TREND_AP_SECRET: '{{resolve:ssm:TREND_AP_SECRET}}'
+      Role: !GetAtt AppSecC1SDDemoAppLambdaIAMRole.Arn
+      Timeout: 60
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref VpcEndpointSecurityGroupID
+        SubnetIds:
+          - !Ref LambdaVpcConfigSubnetId
+
+  AppSecC1SDDemoAppLambdaIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service:
+                - 'lambda.amazonaws.com'
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole'
+      Policies:
+        - PolicyName: AppSecC1SDDemoAppLambdaIAMPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: 'Allow'
+                Action:                  
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AppSecC1SDDemoAppLambdaFunctionName}:*
+              - Effect: 'Allow'
+                Action:                  
+                  - 'logs:PutLogEvents'
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AppSecC1SDDemoAppLambdaFunctionName}:log-stream:*
+              - Effect: 'Allow'
+                Action:                  
+                  - 'ec2:DescribeSecurityGroups'
+                  - 'ec2:DescribeSubnets'
+                  - 'ec2:DescribeVpcs'
+                Resource:
+                  - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${AppSecC1SDDemoAppLambdaFunctionName}
+      Path: '/'
+
+Outputs:
+  AppSecAPIGatewayArn:
+    Value: !Ref AppSecAPIGatewayRestApi
+    Description: "ARN of the API Gateway created for the ApplicationSecurityC1SDAPI"
+
+  AppSecAPIGatewayInvokeURL:
+    Value: !Sub https://${AppSecAPIGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/
+    Description: "REST API Endpoint of the API Gateway that can be used to trigger attacks on the Application Security - C1SD Demo App"
+
+  AppSecAPIGatewayStageName:
+    Value: !Ref AppSecAPIGatewayStage
+    Description: "Environment name for the API Gateway"
+
+  AppSecC1SDDemoAppLambdaFunctionArn:
+    Value: !GetAtt AppSecC1SDDemoAppLambdaFunction.Arn

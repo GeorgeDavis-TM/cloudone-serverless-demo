@@ -7,8 +7,6 @@ Metadata:
         Label:
           default: "Cloud One Serverless Deployment Configuration"
         Parameters:
-          - QSS3BucketName
-          - QSS3KeyPrefix
           - C1SDStateMachineArn
       -
         Label:
@@ -17,26 +15,10 @@ Metadata:
           - DefaultAPIGatewayStage
           - TriggerStateMachineLambdaFunctionName
     ParameterLabels:
-      QSS3BucketName:
-        default: "S3 Bucket Name that contains the Deployment resources"
-      QSS3KeyPrefix:
-        default: "S3 Key Prefix for the Deployment resources"
       C1SDStateMachineArn:
         default: "ARN of the C1SD State Machine"
 
 Parameters:
-  QSS3BucketName:
-    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
-    ConstraintDescription: Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).
-    Default: cloudonedemo
-    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).
-    Type: String
-  QSS3KeyPrefix:
-    AllowedPattern: ^[0-9a-zA-Z-/.]*$
-    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and forward slash (/).
-    Default: "cloudone-serverless-demo/"
-    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), dots(.) and forward slash (/).
-    Type: String
   C1SDStateMachineArn:
     ConstraintDescription: must be a valid AWS ARN
     Description: ARN of the State Machine that runs the Cloud One Serverless Demo workflow.

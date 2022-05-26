@@ -175,8 +175,8 @@ Resources:
           CUSTOM_S3_KEY_PREFIX: !Ref QSS3KeyPrefix
           CUSTOM_S3_DEST_BUCKET: !Ref S3StaticWebBucket
           CUSTOM_S3_OBJECT_LIST: 'index.html,error.html,bootstrap-filestyle.min.js'
-          TREND_AP_KEY: '{{resolve:ssm:TREND_AP_KEY}}'
-          TREND_AP_SECRET: '{{resolve:ssm:TREND_AP_SECRET}}'
+          TREND_AP_KEY: '{{resolve:ssm:TREND_AP_KEY_CloudOneServerlessDemo-MgmtApis}}'
+          TREND_AP_SECRET: '{{resolve:ssm:TREND_AP_SECRET_CloudOneServerlessDemo-MgmtApis}}'
       Role: !GetAtt C1SDLambdaCopyS3ObjPolicy.Arn      
       Timeout: 180
 
@@ -203,6 +203,7 @@ Resources:
                   - 's3:GetObject'
                   - 's3:PutObject'
                   - 's3:PutObjectAcl'                
+                  - 's3:DeleteObject'
                 Resource:
                   - !GetAtt S3StaticWebBucket.Arn
                   - !Join
@@ -311,8 +312,8 @@ Resources:
           CUSTOM_S3_BUCKET: !Ref S3StaticWebBucket
           CUSTOM_S3_OBJECT_LIST: 'index.html,error.html'
           CUSTOM_INVOKE_URL: !Ref APIGatewayInvokeURL
-          TREND_AP_KEY: '{{resolve:ssm:TREND_AP_KEY}}'
-          TREND_AP_SECRET: '{{resolve:ssm:TREND_AP_SECRET}}'
+          TREND_AP_KEY: '{{resolve:ssm:TREND_AP_KEY_CloudOneServerlessDemo-MgmtApis}}'
+          TREND_AP_SECRET: '{{resolve:ssm:TREND_AP_SECRET_CloudOneServerlessDemo-MgmtApis}}'
       Role: !GetAtt C1SDLambdaDeployS3WebPolicy.Arn
       Timeout: 180
 

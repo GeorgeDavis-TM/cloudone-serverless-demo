@@ -235,8 +235,8 @@ Resources:
         Variables:
           REGION_NAME: !Ref "AWS::Region"
           STATE_MACHINE_ARN: !Ref C1SDStateMachineArn
-          TREND_AP_KEY: '{{resolve:ssm:TREND_AP_KEY}}'
-          TREND_AP_SECRET: '{{resolve:ssm:TREND_AP_SECRET}}'
+          TREND_AP_KEY: '{{resolve:ssm:TREND_AP_KEY_CloudOneServerlessDemo-MgmtApis}}'
+          TREND_AP_SECRET: '{{resolve:ssm:TREND_AP_SECRET_CloudOneServerlessDemo-MgmtApis}}'
       Role: !GetAtt TriggerStateMachineLambdaIAMRole.Arn
       Timeout: 180
       VpcConfig:

@@ -231,8 +231,8 @@ Resources:
         - !Sub arn:aws:lambda:${AWS::Region}:800880067056:layer:CloudOne-ApplicationSecurity-python:1
       Environment:
         Variables:
-          TREND_AP_KEY: '{{resolve:ssm:TREND_AP_KEY}}'
-          TREND_AP_SECRET: '{{resolve:ssm:TREND_AP_SECRET}}'
+          TREND_AP_KEY: '{{resolve:ssm:TREND_AP_KEY_CloudOneServerlessDemoApp}}'
+          TREND_AP_SECRET: '{{resolve:ssm:TREND_AP_SECRET_CloudOneServerlessDemoApp}}'
       Role: !GetAtt AppSecC1SDDemoAppLambdaIAMRole.Arn
       Timeout: 60
       VpcConfig:

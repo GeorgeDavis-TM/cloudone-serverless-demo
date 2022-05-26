@@ -63,8 +63,8 @@ Resources:
         - !Sub arn:aws:lambda:${AWS::Region}:800880067056:layer:CloudOne-ApplicationSecurity-python:1
       Environment:
         Variables:          
-          TREND_AP_KEY: '{{resolve:ssm:TREND_AP_KEY}}'
-          TREND_AP_SECRET: '{{resolve:ssm:TREND_AP_SECRET}}'
+          TREND_AP_KEY: '{{resolve:ssm:TREND_AP_KEY_CloudOneServerlessDemo-MgmtApis}}'
+          TREND_AP_SECRET: '{{resolve:ssm:TREND_AP_SECRET_CloudOneServerlessDemo-MgmtApis}}'
       Role: !GetAtt LambdaExecutionRole.Arn
       MemorySize: 250
       Timeout: 10

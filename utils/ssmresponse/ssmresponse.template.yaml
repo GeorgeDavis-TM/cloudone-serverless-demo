@@ -81,8 +81,8 @@ Resources:
           PLUGIN_NAME: 'runShellScript'
           REGION_NAME: !Ref 'AWS::Region'
           SLEEP_TIMER: 5        
-          TREND_AP_KEY: '{{resolve:ssm:TREND_AP_KEY}}'
-          TREND_AP_SECRET: '{{resolve:ssm:TREND_AP_SECRET}}'
+          TREND_AP_KEY: '{{resolve:ssm:TREND_AP_KEY_CloudOneServerlessDemo-MgmtApis}}'
+          TREND_AP_SECRET: '{{resolve:ssm:TREND_AP_SECRET_CloudOneServerlessDemo-MgmtApis}}'
       Role: !GetAtt SSMGetResponseRole.Arn
       MemorySize: 250
       Timeout: 180

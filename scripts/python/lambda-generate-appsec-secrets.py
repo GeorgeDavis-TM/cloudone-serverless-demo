@@ -24,23 +24,32 @@ def lambda_handler(event, context):
             utilsObj = Utils()
             groupsObj = Groups()
 
-            createGroupResponse = groupsObj.createNewGroup()
-            # print(str(createGroupResponse))
+            c1asSecurityGroupNamesList = str(os.environ.get("c1asSecurityGroupNames"))
 
-            utilsObj.setAwsSsmParameter("TREND_AP_KEY", createGroupResponse["apiCredsKey"])
-            utilsObj.setAwsSsmParameter("TREND_AP_SECRET", createGroupResponse["apiCredsSecret"])
+            if c1asSecurityGroupNamesList[-1] == ",":
+                c1asSecurityGroupNamesList = c1asSecurityGroupNamesList[:-1].replace(" ", "").split(",")
+            else:
+                c1asSecurityGroupNamesList = c1asSecurityGroupNamesList.replace(" ", "").split(",")
 
-            time.sleep(5)
+            for c1asSecurityGroupName in c1asSecurityGroupNamesList:
 
-            groupsObj.setGroupEnablePolicy(createGroupResponse["groupId"])
+                createGroupResponse = groupsObj.createNewGroup(c1asSecurityGroupName)
+                # print(str(createGroupResponse))
 
-            policyObj = Policies()
+                utilsObj.setAwsSsmParameter("TREND_AP_KEY_" + str(c1asSecurityGroupName), createGroupResponse["apiCredsKey"])
+                utilsObj.setAwsSsmParameter("TREND_AP_SECRET_" + str(c1asSecurityGroupName), createGroupResponse["apiCredsSecret"])
 
-            currentIllegalFileAccessPolicyDict = policyObj.getIllegalFileAccessPolicy(createGroupResponse["groupId"])
-            currentRCEPolicyDict = policyObj.getRCEPolicy(createGroupResponse["groupId"])
+                time.sleep(5)
 
-            policyObj.addIllegalFileAccessPolicy(createGroupResponse["groupId"], currentIllegalFileAccessPolicyDict)
-            policyObj.addRCEPolicy(createGroupResponse["groupId"], currentRCEPolicyDict)
+                groupsObj.setGroupEnablePolicy(createGroupResponse["groupId"])
+
+                policyObj = Policies()
+
+                currentIllegalFileAccessPolicyDict = policyObj.getIllegalFileAccessPolicy(createGroupResponse["groupId"])
+                currentRCEPolicyDict = policyObj.getRCEPolicy(createGroupResponse["groupId"])
+
+                policyObj.addIllegalFileAccessPolicy(createGroupResponse["groupId"], currentIllegalFileAccessPolicyDict)
+                policyObj.addRCEPolicy(createGroupResponse["groupId"], currentRCEPolicyDict)
 
     except Exception as e:
         logger.info("Exception: {}".format(e))

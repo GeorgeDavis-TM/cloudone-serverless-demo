@@ -40,7 +40,7 @@ Resources:
       Environment:
         Variables:
           awsDeployRegion: !Ref "AWS::Region"
-          c1asSecurityGroupName: CloudOneServerlessDemo-MgmtApis
+          c1asSecurityGroupNames: CloudOneServerlessDemo-MgmtApis,CloudOneServerlessDemoApp
           c1asApiAuthToken: ssm:WSApiKey
       Role: !GetAtt C1ASSecurityLambdaRole.Arn
       MemorySize: 250
@@ -72,8 +72,8 @@ Resources:
                 Action:
                   - 'ssm:PutParameter'                
                 Resource:
-                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/TREND_AP_KEY
-                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/TREND_AP_SECRET
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/TREND_AP_KEY_*
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/TREND_AP_SECRET_*
         - PolicyName: C1ASSecurityLambdaLogsPolicy
           PolicyDocument:
             Version: "2012-10-17"

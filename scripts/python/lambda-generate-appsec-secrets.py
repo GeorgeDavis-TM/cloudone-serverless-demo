@@ -31,7 +31,11 @@ def lambda_handler(event, context):
             else:
                 c1asSecurityGroupNamesList = c1asSecurityGroupNamesList.replace(" ", "").split(",")
 
+            # print(str(c1asSecurityGroupNamesList))
+
             for c1asSecurityGroupName in c1asSecurityGroupNamesList:
+
+                # print(str(c1asSecurityGroupName))
 
                 createGroupResponse = groupsObj.createNewGroup(c1asSecurityGroupName)
                 # print(str(createGroupResponse))
@@ -65,10 +69,10 @@ class Groups:
 
         self.utilsObj = Utils()
 
-    def createNewGroup(self):
+    def createNewGroup(self, c1asSecurityGroupName):
 
         body = {
-            "name": self.utilsObj.c1asSecurityGroupName
+            "name": c1asSecurityGroupName
         }       
 
         r = self.utilsObj.httpObj.request('POST', self.utilsObj.baseUrl + '/accounts/groups', body=json.dumps(body))
@@ -160,7 +164,13 @@ class Utils:
 
         self.ssmClient = boto3.client('ssm', region_name=self.awsDeployRegion)
 
-        self.c1asSecurityGroupName = str(os.environ.get("c1asSecurityGroupName"))
+        self.c1asSecurityGroupNamesList = str(os.environ.get("c1asSecurityGroupNames"))
+
+        if self.c1asSecurityGroupNamesList[-1] == ",":
+            self.c1asSecurityGroupNamesList = self.c1asSecurityGroupNamesList[:-1].replace(" ", "").split(",")
+        else:
+            self.c1asSecurityGroupNamesList = self.c1asSecurityGroupNamesList.replace(" ", "").split(",")
+
         self.c1asApiAuthToken = str(os.environ.get("c1asApiAuthToken"))
 
         if "ssm:" in self.c1asApiAuthToken:

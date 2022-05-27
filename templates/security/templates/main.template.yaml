@@ -72,8 +72,10 @@ Resources:
                 Action:
                   - 'ssm:PutParameter'                
                 Resource:
-                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/TREND_AP_KEY_*
-                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/TREND_AP_SECRET_*
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/TREND_AP_KEY_CloudOneServerlessDemo-MgmtApis
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/TREND_AP_SECRET_CloudOneServerlessDemo-MgmtApis
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/TREND_AP_KEY_CloudOneServerlessDemoApp
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/TREND_AP_SECRET_CloudOneServerlessDemoApp
         - PolicyName: C1ASSecurityLambdaLogsPolicy
           PolicyDocument:
             Version: "2012-10-17"

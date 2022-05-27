@@ -292,12 +292,12 @@ Outputs:
   AWSConsoleUrl:
     Value: !Sub 'https://${AWS::AccountId}.signin.aws.amazon.com/console?region=${AWS::Region}'
 
-# #Application Security Outputs
-#   C1ASWebbAppURL:
-#     Value: !GetAtt ApplicationSecurityStack.Outputs.ApplicationSecurityWebAppUrl
+#Application Security Outputs
+  C1ASWebAppURL:
+    Value: !Sub ${ApplicationSecurityStack.Outputs.AppSecAPIGatewayInvokeURL}${ApplicationSecurityStack.Outputs.AppSecAPIGatewayStageName}
 
-#   C1ASLambdatoProtect:
-#     Value: !GetAtt ApplicationSecurityStack.Outputs.ApplicationSecurityBackendLambdaCode
+  C1ASLambdatoProtect:
+    Value: !GetAtt ApplicationSecurityStack.Outputs.AppSecC1SDDemoAppLambdaFunctionArn
 
 # # Deploy Code
 #   C1WSDeployCodeLambdaFunction:
